@@ -1,0 +1,56 @@
+<!-- app/views/password/forgot.phtml -->
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card card-elegant">
+            <div class="card-header card-header-elegant">
+                <h3 class="mb-0"><i class="bi bi-key me-2"></i>Recuperar Contraseña</h3>
+            </div>
+            <div class="card-body card-body-elegant">
+                <?php View::content(); ?>
+                
+                <div class="text-center mb-4">
+                    <div class="feature-icon text-warning">
+                        <i class="bi bi-question-circle"></i>
+                    </div>
+                    <h4>¿Olvidaste tu contraseña?</h4>
+                    <p class="text-muted">Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+                </div>
+                
+                <?php echo Form::open('password/request_reset', 'class="needs-validation" novalidate'); ?>
+                
+                <div class="mb-4">
+                    <label for="email" class="form-label">
+                        <i class="bi bi-envelope me-1"></i>Email Registrado
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">@</span>
+                        <?php echo Form::email('email', 'class="form-control form-control-custom" id="email" required placeholder="Ingresa el email de tu cuenta"'); ?>
+                    </div>
+                    <div class="form-text">
+                        Debe ser el email que usaste al registrarte
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <?php echo Form::submit('Enviar Enlace de Recuperación', 'class="btn btn-warning btn-lg"'); ?>
+                    <a href="<?php echo Html::link('index/index'); ?>" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Volver al Login
+                    </a>
+                </div>
+                
+                <?php echo Form::close(); ?>
+                
+                <div class="mt-4">
+                    <div class="alert alert-light border">
+                        <h6><i class="bi bi-lightbulb me-2"></i>Recomendaciones</h6>
+                        <ul class="small mb-0">
+                            <li>Revisa tu carpeta de spam si no recibes el email</li>
+                            <li>El enlace expira en 1 hora por seguridad</li>
+                            <li>Si no recuerdas tu email, contacta con soporte</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

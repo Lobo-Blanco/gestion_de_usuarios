@@ -1,0 +1,31 @@
+<!-- app/views/index/status.phtml -->
+<div class="status-container">
+    <h2>Estado de Autenticación</h2>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3>Usuario Autenticado</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Código:</strong> <?php echo $usuario['codigo']; ?></p>
+            <p><strong>Nombre:</strong> <?php echo $usuario['nombre']; ?></p>
+            <p><strong>Email:</strong> <?php echo $usuario['email']; ?></p>
+            <p><strong>Rol:</strong> <?php echo $usuario['rol']; ?></p>
+            <p><strong>Método de autenticación:</strong> <?php echo $usuario['auth_method']; ?></p>
+        </div>
+        <div class="card-footer">
+            <?php echo Html::link('index/logout', 'Cerrar Sesión', 'class="btn btn-warning"'); ?>
+            
+            <?php if (AuthHelper::hasAdminAccess()): ?>
+                <?php echo Html::link('admin/', 'Panel de Administración', 'class="btn btn-danger"'); ?>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <?php if (!empty($menus)): ?>
+        <div class="user-menu">
+            <h3>Menús Disponibles</h3>
+            <?php echo $menus; ?>
+        </div>
+    <?php endif; ?>
+</div>

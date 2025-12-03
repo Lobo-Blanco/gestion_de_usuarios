@@ -1,0 +1,223 @@
+<!-- app/views/admin/menus/crear.phtml y editar.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-list"></i> 
+        <?php echo isset($menu) && $menu->id ? 'Editar Menú' : 'Nuevo Menú'; ?>
+    </h2>
+</div>
+
+<?php echo Form::open(isset($menu) && $menu->id ? 'admin/menus/actualizar/' . $menu->id : 'admin/menus/guardar'); ?>
+
+<?php if (isset($menu) && $menu->id): ?>
+    <?php echo Form::hidden('id', $menu->id); ?>
+<?php endif; ?>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="nombre">Nombre del Menú *</label>
+            <?php echo Form::text('nombre', 'class="form-control" required', isset($menu) ? $menu->nombre : ''); ?>
+        </div>
+        
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <?php echo Form::textarea('descripcion', 'class="form-control" rows="2"', isset($menu) ? $menu->descripcion : ''); ?>
+        </div>
+        
+        <div class="form-group">
+            <label for="icono">Icono (FontAwesome)</label>
+            <div class="input-group">
+                <?php echo Form::text('icono', 'class="form-control" placeholder="fa fa-home"', isset($menu) ? $menu->icono : ''); ?>
+                <span class="input-group-addon">
+                    <i class="fa fa-question-circle" title="Ej: fa fa-home, fa fa-user, fa fa-cog"></i>
+                </span>
+            </div>
+            <small class="text-muted">Usar clases de FontAwesome: fa fa-nombre</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="menus_id">Menú Padre</label>
+            <?php 
+            $opciones = array('' => '-- Menú Raíz --');
+            if (isset($menus_disponibles)) {
+                foreach ($menus_disponibles as $m) {
+                    if (!isset($menu) || $menu->id != $m->id) {
+                        $opciones[$m->id] = str_repeat('-- ', $m->nivel ?? 0) . $m->nombre;
+                    }
+                }
+            }
+            echo Form::select('menus_id', $opciones, 'class="form-control"', isset($menu) ? $menu->menus_id : '');
+            ?>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Destino del Menú</h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label>Tipo de Enlace</label><br>
+                    <div class="radio">
+                        <label>
+                            <?php echo Form::radio('tipo_enlace', 'recurso', isset($menu) && $menu->recursos_id ? true : false, 'id="tipo_recurso"'); ?>
+                            <strong>Recurso del Sistema</strong>
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <?php echo Form::radio('tipo_enlace', 'url', isset($menu) && $menu->url ? true : false, 'id="tipo_url"'); ?>
+                            <strong>URL Directa</strong>
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <?php echo Form::radio('tipo_enlace', 'contenedor', (!isset($menu) || (!$menu->recursos_id && !$menu->url)) ? true : false, 'id="tipo_contenedor"'); ?>
+                            <strong>Solo Contenedor (sin enlace)</strong>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Selector de Recurso -->
+                <div id="recurso_container" style="display: <?php echo (isset($menu) && $menu->recursos_id) ? 'block' : 'none'; ?>;">
+                    <div class="form-group">
+                        <label for="recursos_id">Recurso Asociado</label>
+                        <?php 
+                        $recursos_opciones = array('' => '-- Seleccionar Recurso --');
+                        if (isset($recursos)) {
+                            foreach ($recursos as $recurso) {
+                                $texto = $recurso->nombre;
+                                if ($recurso->modulo) $texto = $recurso->modulo . '::' . $texto;
+                                $recursos_opciones[$recurso->id] = $texto . ' (' . $recurso->controlador . '/' . $recurso->accion . ')';
+                            }
+                        }
+                        echo Form::select('recursos_id', $recursos_opciones, 'class="form-control form-select"', isset($menu) ? $menu->recursos_id : '');
+                        ?>
+                    </div>
+                </div>
+                
+                <!-- Campo URL -->
+                <div id="url_container" style="display: <?php echo (isset($menu) && $menu->url) ? 'block' : 'none'; ?>;">
+                    <div class="form-group">
+                        <label for="url">URL</label>
+                        <?php echo Form::text('url', 'class="form-control" placeholder="/ruta/o/controlador/accion"', isset($menu) ? $menu->url : ''); ?>
+                    </div>
+                </div>
+                
+                <!-- Parámetros (para ambos tipos) -->
+                <div id="parametros_container" style="display: <?php echo (isset($menu) && ($menu->recursos_id || $menu->url)) ? 'block' : 'none'; ?>;">
+                    <div class="form-group">
+                        <label for="parameters">Parámetros Fijos</label>
+                        <?php echo Form::text('parameters', 'class="form-control" placeholder="param1/valor1/param2/valor2"', isset($menu) ? $menu->parameters : ''); ?>
+                        <small class="text-muted">Parámetros adicionales para la URL (separados por /)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="posicion">Orden *</label>
+                    <?php echo Form::number('posicion', 'class="form-control" required min="0"', isset($menu) ? $menu->posicion : 0); ?>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Estado</label><br>
+                    <?php echo Form::check('activo', 1, isset($menu) ? $menu->activo : 1); ?> Activo
+                    <?php echo Form::check('visible', 1, isset($menu) ? $menu->visible : 1); ?> Visible
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <button type="submit" class="btn btn-primary">
+        <i class="fa fa-save"></i> Guardar Menú
+    </button>
+    <?php echo Html::link('admin/menus/index', 'Cancelar', 'class="btn btn-default"'); ?>
+</div>
+
+<?php echo Form::close(); ?>
+
+<script>
+(function() {
+    'use strict';
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var tipoEnlaceRadios = document.querySelectorAll('input[name="tipo_enlace"]');
+        var recursoSelect = document.getElementById('recursos_id');
+        var urlInput = document.getElementById('url');
+        
+        function mostrarElemento(elemento) {
+            if (elemento) {
+                elemento.style.display = 'block';
+                // Si hay campos requeridos, habilitarlos
+                if (elemento.tagName === 'SELECT' || elemento.tagName === 'INPUT') {
+                    elemento.required = true;
+                }
+            }
+        }
+        
+        function ocultarElemento(elemento) {
+            if (elemento) {
+                elemento.style.display = 'none';
+                // Si hay campos requeridos, deshabilitar requerido
+                if (elemento.tagName === 'SELECT' || elemento.tagName === 'INPUT') {
+                    elemento.required = false;
+                }
+            }
+        }
+        
+        function actualizarContenedores() {
+            var tipoSeleccionado = document.querySelector('input[name="tipo_enlace"]:checked');
+            
+            if (!tipoSeleccionado) return;
+            
+            var tipo = tipoSeleccionado.value;
+            var recursoContainer = document.getElementById('recurso_container');
+            var urlContainer = document.getElementById('url_container');
+            var parametrosContainer = document.getElementById('parametros_container');
+            
+            // Resetear todos
+            ocultarElemento(recursoContainer);
+            ocultarElemento(urlContainer);
+            ocultarElemento(parametrosContainer);
+            
+            if (recursoSelect) recursoSelect.required = false;
+            if (urlInput) urlInput.required = false;
+            
+            // Configurar según tipo
+            switch(tipo) {
+                case 'recurso':
+                    mostrarElemento(recursoContainer);
+                    mostrarElemento(parametrosContainer);
+                    if (recursoSelect) recursoSelect.required = true;
+                    break;
+                    
+                case 'url':
+                    mostrarElemento(urlContainer);
+                    mostrarElemento(parametrosContainer);
+                    if (urlInput) urlInput.required = true;
+                    break;
+                    
+                case 'contenedor':
+                    // No mostrar nada
+                    break;
+            }
+        }
+        
+        // Agregar eventos
+        tipoEnlaceRadios.forEach(function(radio) {
+            radio.addEventListener('change', actualizarContenedores);
+            radio.addEventListener('click', actualizarContenedores);
+        });
+        
+        // Inicializar
+        actualizarContenedores();
+    });
+})();
+</script>

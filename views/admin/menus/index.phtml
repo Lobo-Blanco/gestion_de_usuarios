@@ -1,0 +1,99 @@
+<!-- app/views/admin/menus/index.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-list"></i> Gestión de Menús
+        <?php echo Html::link('admin/menus/crear', '<i class="fa fa-plus"></i> Nuevo Menú', 'class="btn btn-success pull-right"'); ?>
+    </h2>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Estructura de Menús</h3>
+            </div>
+            <div class="panel-body">
+                <?php if ($menus && count($menus) > 0): ?>
+                    <?php 
+                    // Función recursiva para renderizar árbol
+                    function renderMenuTree($menus, $nivel = 0) {
+                        $html = '<ul class="list-group" style="margin-left: ' . ($nivel * 30) . 'px;">';
+                        
+                        foreach ($menus as $menu) {
+                            $html .= '<li class="list-group-item">';
+                            $html .= '<div class="pull-right">';
+                            $html .= Html::link('admin/menus/editar/' . $menu->id, '<i class="fa fa-edit"></i>', 'class="btn btn-xs btn-primary" title="Editar"');
+                            $html .= Html::link('admin/menus/eliminar/' . $menu->id, '<i class="fa fa-trash"></i>', 'class="btn btn-xs btn-danger btn-delete" title="Eliminar"');
+                            $html .= '</div>';
+                            
+                            $html .= '<strong>';
+                            if (!empty($menu->icono)) {
+                                $html .= '<i class="' . h($menu->icono) . '"></i> ';
+                            }
+                            $html .= h($menu->nombre) . '</strong>';
+                            
+                            if ($menu->recursos_id) {
+                                $html .= ' <span class="label label-info">Recurso</span>';
+                            } elseif ($menu->url) {
+                                $html .= ' <span class="label label-warning">URL</span>';
+                            } else {
+                                $html .= ' <span class="label label-default">Contenedor</span>';
+                            }
+                            
+                            $html .= '<br>';
+                            $html .= '<small class="text-muted">';
+                            $html .= 'Orden: ' . $menu->posicion . ' | ';
+                            $html .= ($menu->activo ? 'Activo' : 'Inactivo');
+                            $html .= '</small>';
+                            
+                            if (!empty($menu->hijos)) {
+                                $html .= renderMenuTree($menu->hijos, $nivel + 1);
+                            }
+                            
+                            $html .= '</li>';
+                        }
+                        
+                        $html .= '</ul>';
+                        return $html;
+                    }
+                    ?>
+                    <div id="menu-tree">
+                        <?php echo renderMenuTree($menus); ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i> No hay menús definidos.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Información sobre Menús</h3>
+            </div>
+            <div class="panel-body">
+                <h4>Tipos de Menú:</h4>
+                <ul>
+                    <li><span class="label label-default">Contenedor</span> - Solo agrupa otros menús</li>
+                    <li><span class="label label-info">Recurso</span> - Enlaza a un recurso del sistema</li>
+                    <li><span class="label label-warning">URL</span> - Enlaza a una URL directa</li>
+                </ul>
+                
+                <h4>Reglas de Acceso:</h4>
+                <ul>
+                    <li>Los menús con <strong>recurso</strong> respetan los permisos del recurso</li>
+                    <li>Los menús con <strong>URL</strong> son visibles para todos los usuarios autenticados</li>
+                    <li>Los <strong>contenedores</strong> solo son visibles si tienen al menos un hijo accesible</li>
+                </ul>
+                
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>Importante:</strong> Los cambios en los menús pueden requerir limpiar la cache del sistema.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,91 @@
+<div class="container-fluid">
+    <div class="page-header">
+        <h1><?= $title ?></h1>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Configuración de Base de Datos - Desarrollo</h3>
+                </div>
+                <div class="panel-body">
+                    <form method="post" action="">
+                        <div class="form-group">
+                            <label for="db_driver">Driver</label>
+                            <select class="form-control" id="db_driver" name="db_driver">
+                                <option value="mysql" <?= ($config_db['development']['driver'] ?? 'mysql') == 'mysql' ? 'selected' : '' ?>>MySQL</option>
+                                <option value="pgsql" <?= ($config_db['development']['driver'] ?? '') == 'pgsql' ? 'selected' : '' ?>>PostgreSQL</option>
+                                <option value="sqlite" <?= ($config_db['development']['driver'] ?? '') == 'sqlite' ? 'selected' : '' ?>>SQLite</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="db_host">Host</label>
+                                    <input type="text" class="form-control" id="db_host" name="db_host" 
+                                           value="<?= htmlspecialchars($config_db['development']['host'] ?? 'localhost') ?>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="db_port">Puerto</label>
+                                    <input type="number" class="form-control" id="db_port" name="db_port" 
+                                           value="<?= $config_db['development']['port'] ?? 3306 ?>">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="db_username">Usuario</label>
+                                    <input type="text" class="form-control" id="db_username" name="db_username" 
+                                           value="<?= htmlspecialchars($config_db['development']['username'] ?? 'root') ?>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="db_password">Contraseña</label>
+                                    <input type="password" class="form-control" id="db_password" name="db_password" 
+                                           value="<?= htmlspecialchars($config_db['development']['password'] ?? '') ?>">
+                                    <small class="text-muted">Dejar vacío si no hay contraseña</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="db_database">Nombre de Base de Datos</label>
+                            <input type="text" class="form-control" id="db_database" name="db_database" 
+                                   value="<?= htmlspecialchars($config_db['development']['database'] ?? 'sistema') ?>" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="db_charset">Charset</label>
+                            <select class="form-control" id="db_charset" name="db_charset">
+                                <option value="utf8" <?= ($config_db['development']['charset'] ?? 'utf8') == 'utf8' ? 'selected' : '' ?>>UTF-8</option>
+                                <option value="utf8mb4" <?= ($config_db['development']['charset'] ?? '') == 'utf8mb4' ? 'selected' : '' ?>>UTF-8MB4</option>
+                                <option value="latin1" <?= ($config_db['development']['charset'] ?? '') == 'latin1' ? 'selected' : '' ?>>Latin1</option>
+                            </select>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <strong>Nota:</strong> Los cambios en la configuración de base de datos pueden afectar el funcionamiento del sistema.
+                            Asegúrese de tener permisos y credenciales correctas.
+                        </div>
+                        
+                        <button type="submit" name="guardar_db" class="btn btn-primary">
+                            <i class="glyphicon glyphicon-save"></i> Guardar Configuración
+                        </button>
+                        <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-default">
+                            <i class="glyphicon glyphicon-arrow-left"></i> Volver
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,141 @@
+<!-- app/views/configuracion/autenticacion.phtml -->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-2 text-gray-800"><?= $title ?></h1>
+        </div>
+    </div>
+
+    <?php View::partial('flash') ?>
+
+    <form method="post" action="">
+        <input type="hidden" name="_csrf_token" value="<?= $csrf_token ?>">
+        
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Modos de Autenticación</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Seleccione modos habilitados:</label><br>
+                    <?php foreach ($authModes as $value => $label): ?>
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" 
+                               class="custom-control-input" 
+                               id="mode_<?= $value ?>"
+                               name="authentication_modes[]" 
+                               value="<?= $value ?>"
+                               <?= in_array($value, $config_auth['authentication_modes'] ?? []) ? 'checked' : '' ?>>
+                        <label class="custom-control-label" for="mode_<?= $value ?>">
+                            <?= $label ?>
+                        </label>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Autenticación por Credenciales</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" 
+                               class="custom-control-input" 
+                               id="credentials_enabled"
+                               name="credentials_enabled" 
+                               value="1"
+                               <?= ($config_auth['credentials']['enabled'] ?? true) ? 'checked' : '' ?>>
+                        <label class="custom-control-label" for="credentials_enabled">
+                            Habilitar autenticación por credenciales
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" 
+                               class="custom-control-input" 
+                               id="allow_registration"
+                               name="allow_registration" 
+                               value="1"
+                               <?= ($config_auth['credentials']['allow_registration'] ?? true) ? 'checked' : '' ?>>
+                        <label class="custom-control-label" for="allow_registration">
+                            Permitir registro público
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" 
+                               class="custom-control-input" 
+                               id="verify_email"
+                               name="verify_email" 
+                               value="1"
+                               <?= ($config_auth['credentials']['verify_email'] ?? false) ? 'checked' : '' ?>>
+                        <label class="custom-control-label" for="verify_email">
+                            Requerir verificación de email
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Configuración de Sesión</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="session_lifetime">Duración de sesión (segundos)</label>
+                    <input type="number" 
+                           class="form-control" 
+                           id="session_lifetime"
+                           name="session_lifetime" 
+                           min="300" 
+                           max="86400"
+                           value="<?= $config_auth['session']['lifetime'] ?? 7200 ?>">
+                    <small class="form-text text-muted">Mínimo: 300 (5 min), Máximo: 86400 (24 horas)</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Roles Administrativos</h6>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Seleccione roles con acceso administrativo:</label><br>
+                    <?php foreach ($availableRoles as $role): ?>
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" 
+                               class="custom-control-input" 
+                               id="role_<?= $role['id'] ?>"
+                               name="admin_roles[]" 
+                               value="<?= $role['codigo'] ?>"
+                               <?= in_array($role['codigo'], $config_auth['admin_roles'] ?? []) ? 'checked' : '' ?>>
+                        <label class="custom-control-label" for="role_<?= $role['id'] ?>">
+                            <?= htmlspecialchars($role['nombre']) ?>
+                        </label>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-body">
+                <button type="submit" name="guardar_auth" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Configuración
+                </button>
+                <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </form>
+</div>

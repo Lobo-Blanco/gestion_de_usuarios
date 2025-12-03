@@ -1,0 +1,284 @@
+<!-- app/views/recursos/sincronizar.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-refresh"></i> Sincronizar Recursos
+        <div class="pull-right">
+            <?php echo Html::link('admin/recursos/index', '<i class="fa fa-arrow-left"></i> Volver', 'class="btn btn-default"'); ?>
+        </div>
+    </h2>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <!-- Recursos en Configuración -->
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-file-code-o"></i> Recursos en Configuración
+                    <span class="badge"><?php echo $totalConfig; ?></span>
+                </h3>
+            </div>
+            <div class="panel-body" style="max-height: 400px; overflow-y: auto;">
+                <?php if ($totalConfig > 0): ?>
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Módulo</th>
+                                <th>Controlador</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recursosConfig as $nombre => $config): ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo h($nombre); ?></strong><br>
+                                        <small class="text-muted"><?php echo h($config['descripcion'] ?? ''); ?></small>
+                                    </td>
+                                    <td><?php echo h($config['modulo'] ?? ''); ?></td>
+                                    <td><?php echo h($config['controlador']); ?></td>
+                                    <td><?php echo h($config['accion']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        No hay recursos definidos en el archivo de configuración.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <!-- Recursos en Base de Datos -->
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-database"></i> Recursos en Base de Datos
+                    <span class="badge"><?php echo $totalBD; ?></span>
+                </h3>
+            </div>
+            <div class="panel-body" style="max-height: 400px; overflow-y: auto;">
+                <?php if ($totalBD > 0): ?>
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Módulo</th>
+                                <th>Controlador</th>
+                                <th>Acción</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recursosBD as $recurso): ?>
+                                <tr class="<?php echo $recurso->activo ? '' : 'warning'; ?>">
+                                    <td>
+                                        <strong><?php echo h($recurso->nombre); ?></strong><br>
+                                        <small class="text-muted"><?php echo h($recurso->descripcion); ?></small>
+                                    </td>
+                                    <td><?php echo h($recurso->modulo); ?></td>
+                                    <td><?php echo h($recurso->controlador); ?></td>
+                                    <td><?php echo h($recurso->accion); ?></td>
+                                    <td>
+                                        <?php if ($recurso->activo): ?>
+                                            <span class="label label-success">Activo</span>
+                                        <?php else: ?>
+                                            <span class="label label-warning">Inactivo</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i>
+                        No hay recursos en la base de datos.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparación -->
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <i class="fa fa-exchange"></i> Comparación
+        </h3>
+    </div>
+    <div class="panel-body">
+        <?php 
+        // Determinar qué recursos están en configuración pero no en BD
+        $nombresConfig = array_keys($recursosConfig);
+        $nombresBD = array();
+        foreach ($recursosBD as $recurso) {
+            $nombresBD[] = $recurso->nombre;
+        }
+        
+        $nuevos = array_diff($nombresConfig, $nombresBD);
+        $existentes = array_intersect($nombresConfig, $nombresBD);
+        $obsoletos = array_diff($nombresBD, $nombresConfig);
+        ?>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="well text-center">
+                    <h3><?php echo count($nuevos); ?></h3>
+                    <p class="text-success">
+                        <i class="fa fa-plus-circle"></i> Nuevos Recursos
+                    </p>
+                    <?php if (count($nuevos) > 0): ?>
+                        <small>
+                            <?php foreach ($nuevos as $nombre): ?>
+                                <span class="label label-success"><?php echo h($nombre); ?></span>
+                            <?php endforeach; ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="well text-center">
+                    <h3><?php echo count($existentes); ?></h3>
+                    <p class="text-info">
+                        <i class="fa fa-check-circle"></i> Recursos Existentes
+                    </p>
+                    <?php if (count($existentes) > 0): ?>
+                        <small>
+                            <?php 
+                            $sample = array_slice($existentes, 0, 3);
+                            foreach ($sample as $nombre): ?>
+                                <span class="label label-info"><?php echo h($nombre); ?></span>
+                            <?php endforeach; ?>
+                            <?php if (count($existentes) > 3): ?>
+                                <span class="label label-default">+<?php echo count($existentes) - 3; ?> más</span>
+                            <?php endif; ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="well text-center">
+                    <h3><?php echo count($obsoletos); ?></h3>
+                    <p class="text-warning">
+                        <i class="fa fa-question-circle"></i> Posibles Obsoletos
+                    </p>
+                    <?php if (count($obsoletos) > 0): ?>
+                        <small>
+                            <?php foreach ($obsoletos as $nombre): ?>
+                                <span class="label label-warning"><?php echo h($nombre); ?></span>
+                            <?php endforeach; ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-warning">
+            <i class="fa fa-exclamation-triangle"></i>
+            <strong>Nota:</strong> Los recursos marcados como "Posibles Obsoletos" existen en la base de datos 
+            pero no están en el archivo de configuración. Esto puede ser normal si son recursos creados 
+            manualmente. La sincronización no los eliminará automáticamente.
+        </div>
+    </div>
+</div>
+
+<!-- Formulario de confirmación -->
+<div class="panel panel-danger">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <i class="fa fa-exclamation-triangle"></i> Confirmar Sincronización
+        </h3>
+    </div>
+    <div class="panel-body">
+        <div class="alert alert-danger">
+            <h4><i class="fa fa-warning"></i> ¡Atención!</h4>
+            <p>
+                La sincronización realizará las siguientes acciones:
+            </p>
+            <ul>
+                <li>Creará <?php echo count($nuevos); ?> nuevos recursos</li>
+                <li>Actualizará <?php echo count($existentes); ?> recursos existentes</li>
+                <li>No eliminará <?php echo count($obsoletos); ?> recursos obsoletos (manual)</li>
+                <li>Limpiará la cache del sistema ACL</li>
+            </ul>
+            <p>
+                <strong>Esta acción no se puede deshacer.</strong>
+            </p>
+        </div>
+        
+        <?php if (count($nuevos) > 0 || count($existentes) > 0): ?>
+            <?php echo Form::open('admin/recursos/sincronizar'); ?>
+            
+            <div class="checkbox">
+                <label>
+                    <?php echo Form::check('confirmar', 1, false, 'required'); ?>
+                    <strong>Confirmo que deseo proceder con la sincronización</strong>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa fa-refresh"></i> Ejecutar Sincronización
+                </button>
+                <?php echo Html::link('admin/recursos/index', 'Cancelar', 'class="btn btn-default"'); ?>
+            </div>
+            
+            <?php echo Form::close(); ?>
+        <?php else: ?>
+            <div class="alert alert-info">
+                <i class="fa fa-info-circle"></i>
+                No hay cambios pendientes para sincronizar.
+            </div>
+            <div class="text-center">
+                <?php echo Html::link('admin/recursos/index', 'Volver a Recursos', 'class="btn btn-primary"'); ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- Información adicional -->
+<div class="well">
+    <h4><i class="fa fa-question-circle"></i> ¿Qué hace la sincronización?</h4>
+    <ul>
+        <li><strong>Recursos nuevos:</strong> Se crean en la base de datos con estado activo</li>
+        <li><strong>Recursos existentes:</strong> Se actualizan con la información de la configuración</li>
+        <li><strong>Recursos obsoletos:</strong> No se eliminan automáticamente (requiere acción manual)</li>
+        <li><strong>Cache ACL:</strong> Se limpia automáticamente para aplicar los cambios</li>
+    </ul>
+    
+    <h4><i class="fa fa-cog"></i> Configuración del archivo resources.php</h4>
+    <pre style="font-size: 12px; background: #f8f9fa; padding: 10px;">
+// Ejemplo de archivo de configuración
+return [
+    'admin.usuarios.index' => [
+        'nombre' => 'admin.usuarios.index',
+        'modulo' => 'admin',
+        'controlador' => 'usuarios',
+        'accion' => 'index',
+        'descripcion' => 'Lista de usuarios'
+    ],
+    'admin.usuarios.crear' => [
+        'nombre' => 'admin.usuarios.crear',
+        'modulo' => 'admin',
+        'controlador' => 'usuarios',
+        'accion' => 'crear',
+        'descripcion' => 'Crear nuevo usuario'
+    ],
+    // ... más recursos
+];</pre>
+    
+    <p class="text-muted small">
+        <i class="fa fa-lightbulb-o"></i>
+        <strong>Sugerencia:</strong> Mantén tu archivo de configuración actualizado con todos los recursos 
+        del sistema para facilitar la gestión de permisos.
+    </p>
+</div>

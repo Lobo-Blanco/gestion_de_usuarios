@@ -1,0 +1,81 @@
+<!-- app/views/permisos/recursos.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-link"></i> Asignar Recursos al Permiso: <?php echo h($permiso->nombre); ?>
+    </h2>
+    <p class="lead"><?php echo h($permiso->descripcion); ?></p>
+</div>
+
+<?php echo Form::open('admin/permisos/guardar_recursos/' . $permiso->id); ?>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Recursos Disponibles</h3>
+    </div>
+    <div class="panel-body" style="max-height: 400px; overflow-y: auto;">
+        <?php if ($recursos && count($recursos) > 0): ?>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th width="30"></th>
+                        <th>Recurso</th>
+                        <th>Módulo</th>
+                        <th>Controlador</th>
+                        <th>Acción</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($recursos as $recurso): ?>
+                        <tr>
+                            <td>
+                                <?php echo Form::check('recursos[]', $recurso->id, in_array($recurso->id, $recursos_asignados)); ?>
+                            </td>
+                            <td><strong><?php echo h($recurso->nombre); ?></strong></td>
+                            <td><?php echo h($recurso->modulo); ?></td>
+                            <td><?php echo h($recurso->controlador); ?></td>
+                            <td><?php echo h($recurso->accion); ?></td>
+                            <td><?php echo h($recurso->descripcion); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div class="alert alert-warning">
+                No hay recursos definidos. Primero debe crear recursos en el sistema.
+            </div>
+        <?php endif; ?>
+    </div>
+    <div class="panel-footer">
+        <?php if ($recursos && count($recursos) > 0): ?>
+            <div class="checkbox">
+                <label>
+                    <?php echo Form::check('select_all', false, 'id="select_all"'); ?>
+                    <strong>Seleccionar todos los recursos</strong>
+                </label>
+            </div>
+            
+            <script>
+            (function() {
+                var selectAll = document.getElementById('select_all');
+                if (selectAll) {
+                    selectAll.onchange = function() {
+                        document.querySelectorAll('input[name="recursos[]"]').forEach(function(checkbox) {
+                            checkbox.checked = this.checked;
+                        }.bind(this));
+                    };
+                }
+            })();
+            </script>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="form-group">
+    <button type="submit" class="btn btn-success">
+        <i class="fa fa-save"></i> Guardar Asignaciones
+    </button>
+    <?php echo Html::link('admin/permisos/index', 'Volver a Permisos', 'class="btn btn-default"'); ?>
+</div>
+
+<?php echo Form::close(); ?>

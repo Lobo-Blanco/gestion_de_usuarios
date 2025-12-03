@@ -1,0 +1,129 @@
+<div class="container-fluid">
+    <div class="page-header">
+        <h1><?= $title ?></h1>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Configuración de Correo Electrónico</h3>
+                </div>
+                <div class="panel-body">
+                    <form method="post" action="">
+                        <div class="form-group">
+                            <label for="mail_driver">Driver de Correo</label>
+                            <select class="form-control" id="mail_driver" name="mail_driver">
+                                <option value="smtp" <?= ($config_mail['driver'] ?? 'smtp') == 'smtp' ? 'selected' : '' ?>>SMTP</option>
+                                <option value="mail" <?= ($config_mail['driver'] ?? '') == 'mail' ? 'selected' : '' ?>>PHP Mail()</option>
+                                <option value="sendmail" <?= ($config_mail['driver'] ?? '') == 'sendmail' ? 'selected' : '' ?>>Sendmail</option>
+                                <option value="log" <?= ($config_mail['driver'] ?? '') == 'log' ? 'selected' : '' ?>>Log (solo para pruebas)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">Remitente</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="from_address">Email del Remitente</label>
+                                            <input type="email" class="form-control" id="from_address" name="from_address" 
+                                                   value="<?= htmlspecialchars($config_mail['from']['address'] ?? 'noreply@ejemplo.com') ?>" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="from_name">Nombre del Remitente</label>
+                                            <input type="text" class="form-control" id="from_name" name="from_name" 
+                                                   value="<?= htmlspecialchars($config_mail['from']['name'] ?? 'Sistema de Gestión') ?>">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">Configuración SMTP</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="smtp_host">Servidor SMTP</label>
+                                            <input type="text" class="form-control" id="smtp_host" name="smtp_host" 
+                                                   value="<?= htmlspecialchars($config_mail['smtp']['host'] ?? 'smtp.mailtrap.io') ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="smtp_port">Puerto</label>
+                                            <input type="number" class="form-control" id="smtp_port" name="smtp_port" 
+                                                   value="<?= $config_mail['smtp']['port'] ?? 2525 ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="smtp_encryption">Encriptación</label>
+                                            <select class="form-control" id="smtp_encryption" name="smtp_encryption">
+                                                <option value="" <?= empty($config_mail['smtp']['encryption'] ?? '') ? 'selected' : '' ?>>Ninguna</option>
+                                                <option value="ssl" <?= ($config_mail['smtp']['encryption'] ?? '') == 'ssl' ? 'selected' : '' ?>>SSL</option>
+                                                <option value="tls" <?= ($config_mail['smtp']['encryption'] ?? '') == 'tls' ? 'selected' : '' ?>>TLS</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="smtp_username">Usuario SMTP</label>
+                                            <input type="text" class="form-control" id="smtp_username" name="smtp_username" 
+                                                   value="<?= htmlspecialchars($config_mail['smtp']['username'] ?? '') ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="smtp_password">Contraseña SMTP</label>
+                                            <input type="password" class="form-control" id="smtp_password" name="smtp_password" 
+                                                   value="<?= htmlspecialchars($config_mail['smtp']['password'] ?? '') ?>">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <strong>Importante:</strong> Para probar la configuración, puede usar servicios como 
+                            <a href="https://mailtrap.io" target="_blank">Mailtrap</a> en modo de desarrollo.
+                        </div>
+                        
+                        <button type="submit" name="guardar_mail" class="btn btn-primary">
+                            <i class="glyphicon glyphicon-save"></i> Guardar Configuración
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="testEmail()">
+                            <i class="glyphicon glyphicon-send"></i> Probar Configuración
+                        </button>
+                        <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-default">
+                            <i class="glyphicon glyphicon-arrow-left"></i> Volver
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testEmail() {
+    if (confirm('¿Enviar email de prueba a la dirección configurada?')) {
+        // Aquí iría la llamada AJAX para probar el email
+        alert('Funcionalidad de prueba de email en desarrollo');
+    }
+}
+</script>

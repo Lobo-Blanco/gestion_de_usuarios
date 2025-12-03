@@ -1,0 +1,88 @@
+<!-- app/views/usuarios/permisos.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-key"></i> Asignar Permisos al Usuario: <?php echo h($usuario->nombre); ?>
+    </h2>
+    <p class="lead">
+        Código: <?php echo h($usuario->codigo); ?> | 
+        Rol: <span class="label label-info"><?php echo h($usuario->rol); ?></span>
+    </p>
+</div>
+
+<?php echo Form::open('admin/usuarios/guardar_permisos/' . $usuario->id); ?>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Permisos Directos</h3>
+            </div>
+            <div class="panel-body" style="max-height: 400px; overflow-y: auto;">
+                <?php if ($permisos && count($permisos) > 0): ?>
+                    <?php foreach ($permisos as $permiso): ?>
+                        <div class="checkbox">
+                            <label>
+                                <?php echo Form::check('permisos[]', $permiso->id, null, in_array($permiso->id, $permisos_asignados)); ?>
+                                <strong><?php echo h($permiso->nombre); ?></strong>
+                                <br>
+                                <small class="text-muted"><?php echo h($permiso->descripcion); ?></small>
+                            </label>
+                        </div>
+                        <hr style="margin: 5px 0;">
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="alert alert-warning">
+                        No hay permisos definidos en el sistema.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Información</h3>
+            </div>
+            <div class="panel-body">
+                <h4>¿Cómo funcionan los permisos?</h4>
+                <ul>
+                    <li>Los permisos <strong>directos</strong> se asignan específicamente a este usuario.</li>
+                    <li>El <strong>rol</strong> del usuario también otorga permisos automáticamente.</li>
+                    <li>Los permisos se combinan: usuario tiene TODOS los permisos de su rol más los directos.</li>
+                </ul>
+                
+                <h4>Rol Actual: <?php echo h($usuario->rol); ?></h4>
+                <p>Este rol otorga automáticamente acceso a:</p>
+                <ul>
+                    <?php 
+                    // Mostrar recursos accesibles por el rol
+                    $acl = Acl2::factory('database');
+                    $recursosRol = array();
+                    foreach ($recursos as $recurso) {
+                        if ($acl->check($recurso->nombre, $usuario->rol)) {
+                            $recursosRol[] = $recurso->nombre;
+                        }
+                    }
+                    
+                    if (count($recursosRol) > 0): 
+                        foreach ($recursosRol as $recursoNombre): ?>
+                            <li><small><?php echo h($recursoNombre); ?></small></li>
+                        <?php endforeach;
+                    else: ?>
+                        <li><em>Este rol no tiene recursos asignados</em></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <button type="submit" class="btn btn-success">
+        <i class="fa fa-save"></i> Guardar Permisos
+    </button>
+    <?php echo Html::link('admin/usuarios/ver/' . $usuario->id, 'Volver al Usuario', 'class="btn btn-default"'); ?>
+</div>
+
+<?php echo Form::close(); ?>

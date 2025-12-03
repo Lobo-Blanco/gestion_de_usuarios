@@ -1,0 +1,375 @@
+<!-- app/views/layouts/configuracion.phtml -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $title ?> - Sistema de Gestión</title>
+    
+    <!-- Bootstrap 4 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary: #4e73df;
+            --success: #1cc88a;
+            --info: #36b9cc;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --dark: #5a5c69;
+        }
+        
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background: linear-gradient(180deg, var(--primary) 0%, #224abe 100%);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.8);
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+            border-left-color: #fff;
+        }
+        
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        
+        .config-section {
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .config-section h5 {
+            color: var(--primary);
+        }
+        
+        .badge-pill {
+            font-size: 0.75em;
+        }
+        
+        .card {
+            border-radius: 0.35rem;
+            border: 1px solid #e3e6f0;
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .btn-icon-split {
+            padding: 0;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: stretch;
+            justify-content: center;
+        }
+        
+        .btn-icon-split .icon {
+            background: rgba(0,0,0,.15);
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+        }
+        
+        .btn-icon-split .text {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+        }
+        
+        .table-config th {
+            border-top: none;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        pre.config-code {
+            background: #f8f9fa;
+            border: 1px solid #e3e6f0;
+            border-radius: 0.35rem;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .health-check {
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .health-check.ok {
+            background: rgba(28, 200, 138, 0.1);
+            border-left: 3px solid var(--success);
+        }
+        
+        .health-check.warning {
+            background: rgba(246, 194, 62, 0.1);
+            border-left: 3px solid var(--warning);
+        }
+        
+        .health-check.error {
+            background: rgba(231, 74, 59, 0.1);
+            border-left: 3px solid var(--danger);
+        }
+        
+        .stat-card {
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="<?= PUBLIC_PATH ?>">
+                <i class="fas fa-cog mr-2"></i>Sistema de Gestión
+            </a>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                       data-toggle="dropdown">
+                        <i class="fas fa-user mr-1"></i>
+                        <span class="mr-2 d-none d-lg-inline">
+                            <?= Session::get('user_auth')['nombre'] ?? 'Administrador' ?>
+                        </span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="<?= PUBLIC_PATH ?>perfil">
+                            <i class="fas fa-user fa-sm fa-fw mr-2"></i> Perfil
+                        </a>
+                        <a class="dropdown-item" href="<?= PUBLIC_PATH ?>admin/configuracion/sistema">
+                            <i class="fas fa-info-circle fa-sm fa-fw mr-2"></i> Sistema
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="<?= PUBLIC_PATH ?>logout" 
+                           onclick="return confirm('¿Cerrar sesión?')">
+                            <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2"></i> Salir
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse show">
+                <div class="position-sticky pt-3">
+                    <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                        <span>Configuración</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'dashboard' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'autenticacion' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/autenticacion">
+                                <i class="fas fa-user-shield"></i>
+                                Autenticación
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'aplicacion' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/aplicacion">
+                                <i class="fas fa-cogs"></i>
+                                Aplicación
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'base_datos' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/base_datos">
+                                <i class="fas fa-database"></i>
+                                Base de Datos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'acl' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/acl">
+                                <i class="fas fa-lock"></i>
+                                Control de Acceso
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'correo' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/correo">
+                                <i class="fas fa-envelope"></i>
+                                Correo Electrónico
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'cache' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/cache">
+                                <i class="fas fa-bolt"></i>
+                                Cache
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'backup' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/backup">
+                                <i class="fas fa-database"></i>
+                                Backup
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'historial' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/historial">
+                                <i class="fas fa-history"></i>
+                                Historial
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                        <span>Herramientas</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'limpiar_cache' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/limpiar_cache">
+                                <i class="fas fa-broom"></i>
+                                Limpiar Cache
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'importar' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/importar">
+                                <i class="fas fa-file-import"></i>
+                                Importar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $active_menu == 'sistema' ? 'active' : '' ?>" 
+                               href="<?= PUBLIC_PATH ?>admin/configuracion/sistema">
+                                <i class="fas fa-info-circle"></i>
+                                Sistema
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-3">
+                <?php View::content() ?>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+    // Tooltips
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    });
+
+    // Confirmación para acciones críticas
+    function confirmAction(message) {
+        return confirm(message || '¿Está seguro de realizar esta acción?');
+    }
+
+    // Mostrar/Ocultar contraseñas
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = document.querySelector(`[data-toggle="#${inputId}"] i`);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Validación de formularios
+    function validateForm(formId) {
+        const form = document.getElementById(formId);
+        const required = form.querySelectorAll('[required]');
+        let valid = true;
+        
+        required.forEach(input => {
+            if (!input.value.trim()) {
+                input.classList.add('is-invalid');
+                valid = false;
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+        
+        return valid;
+    }
+
+    // Notificaciones Toast
+    function showToast(type, message) {
+        const toast = $(`<div class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="mr-auto">${type === 'success' ? '✅' : '⚠️'} ${type.toUpperCase()}</strong>
+                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">${message}</div>
+        </div>`);
+        
+        $('#toast-container').append(toast);
+        toast.toast({ delay: 5000 }).toast('show');
+        
+        setTimeout(() => toast.remove(), 6000);
+    }
+
+    // Inicializar componentes
+    $(document).ready(function() {
+        // Inicializar Select2
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
+        });
+
+        // Crear contenedor de toasts
+        if (!$('#toast-container').length) {
+            $('body').append('<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+        }
+    });
+    </script>
+</body>
+</html>

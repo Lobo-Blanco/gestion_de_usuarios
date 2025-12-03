@@ -1,0 +1,219 @@
+<!-- app/views/configuracion/acl.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-shield"></i> Configuración de ACL
+        <div class="pull-right">
+            <?php echo Html::link('configuracion/index', '<i class="fa fa-arrow-left"></i> Volver', 'class="btn btn-default"'); ?>
+        </div>
+    </h2>
+</div>
+
+<?php View::content(); ?>
+
+<?php echo Form::open('configuracion/acl'); ?>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Configuración General</h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="acl_cache_enabled">Cache de ACL</label><br>
+                    <?php echo Form::check('acl_cache_enabled', 1, 
+                        isset($config_acl['cache_enabled']) ? $config_acl['cache_enabled'] : 1
+                    ); ?> Habilitar cache
+                    <small class="text-muted block">Mejora el rendimiento cacheando los permisos</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="acl_cache_lifetime">Tiempo de Cache (segundos)</label>
+                    <?php echo Form::number('acl_cache_lifetime', 
+                        isset($config_acl['cache_lifetime']) ? $config_acl['cache_lifetime'] : 3600,
+                        'class="form-control" min="60"'
+                    ); ?>
+                </div>
+                
+                <div class="form-group">
+                    <label for="acl_default_role">Rol por Defecto</label>
+                    <?php echo Form::text('acl_default_role', 
+                        isset($config_acl['default_role']) ? $config_acl['default_role'] : 'usuario',
+                        'class="form-control"'
+                    ); ?>
+                    <small class="text-muted">Rol asignado a nuevos usuarios automáticamente</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="auto_scan_resources">Escaneo Automático</label><br>
+                    <?php echo Form::check('auto_scan_resources', 1, 
+                        isset($config_acl['auto_scan_resources']) ? $config_acl['auto_scan_resources'] : 1
+                    ); ?> Escanear recursos automáticamente
+                    <small class="text-muted">Busca recursos en controladores al iniciar la aplicación</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Recursos Públicos</h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="public_resources">Recursos de Acceso Público</label>
+                    <?php 
+                    $publicResources = isset($config_acl['public_resources']) ? 
+                        implode("\n", $config_acl['public_resources']) : 
+                        "index/index\nauth/login\nauth/register";
+                    ?>
+                    <?php echo Form::textarea('public_resources', $publicResources, 
+                        'class="form-control" rows="6" placeholder="Un recurso por línea"'
+                    ); ?>
+                    <small class="text-muted">
+                        Recursos que no requieren autenticación. Uno por línea.<br>
+                        Ej: index/index, auth/login, public/*
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title">Recursos Administrativos</h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="admin_resources">Recursos de Administración</label>
+                    <?php 
+                    $adminResources = isset($config_acl['admin_resources']) ? 
+                        implode("\n", $config_acl['admin_resources']) : 
+                        "admin.*\nusuarios.*\npermisos.*\nrecursos.*\nmenus.*\nconfiguracion.*";
+                    ?>
+                    <?php echo Form::textarea('admin_resources', $adminResources, 
+                        'class="form-control" rows="6" placeholder="Un recurso por línea"'
+                    ); ?>
+                    <small class="text-muted">
+                        Recursos que requieren rol administrativo. Usar * para wildcards.<br>
+                        Ej: admin.*, usuarios.*, configuracion.*
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Rutas de Escaneo</h3>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="scan_paths">Directorios para Escanear</label>
+                    <?php 
+                    $scanPaths = isset($config_acl['scan_paths']) ? 
+                        implode("\n", $config_acl['scan_paths']) : 
+                        APP_PATH . "controllers/\n" . APP_PATH . "modules/";
+                    ?>
+                    <?php echo Form::textarea('scan_paths', $scanPaths, 
+                        'class="form-control" rows="6" placeholder="Una ruta por línea"'
+                    ); ?>
+                    <small class="text-muted">
+                        Directorios donde buscar controladores para escanear recursos.<br>
+                        Usa rutas absolutas.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-success">
+    <div class="panel-heading">
+        <h3 class="panel-title">Acciones</h3>
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <button type="submit" name="guardar_acl" class="btn btn-success">
+                <i class="fa fa-save"></i> Guardar Configuración
+            </button>
+            <?php echo Html::link('recursos/sincronizar', 
+                '<i class="fa fa-refresh"></i> Sincronizar Recursos', 
+                'class="btn btn-info"'
+            ); ?>
+            <?php echo Html::link('configuracion/limpiar_cache', 
+                '<i class="fa fa-trash"></i> Limpiar Cache', 
+                'class="btn btn-warning"'
+            ); ?>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fa fa-info-circle"></i>
+            <strong>Nota:</strong> Los cambios en la configuración de ACL pueden requerir limpiar la cache 
+            para que surtan efecto inmediatamente.
+        </div>
+    </div>
+</div>
+
+<?php echo Form::close(); ?>
+
+<!-- Información del ACL Actual -->
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            <i class="fa fa-info-circle"></i> Estado Actual del ACL
+        </h3>
+    </div>
+    <div class="panel-body">
+        <?php 
+        try {
+            $acl = Acl2::factory('database');
+            $totalPermisos = (new Permiso())->count();
+            $totalRecursos = (new Recurso())->count();
+            $totalUsuarios = (new Usuario())->count();
+            $totalAsignaciones = (new UsuarioPermiso())->count();
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+        }
+        ?>
+        
+        <div class="row">
+            <div class="col-md-3">
+                <div class="well text-center">
+                    <h3><?php echo $totalPermisos ?? 0; ?></h3>
+                    <p>Permisos</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="well text-center">
+                    <h3><?php echo $totalRecursos ?? 0; ?></h3>
+                    <p>Recursos</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="well text-center">
+                    <h3><?php echo $totalUsuarios ?? 0; ?></h3>
+                    <p>Usuarios</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="well text-center">
+                    <h3><?php echo $totalAsignaciones ?? 0; ?></h3>
+                    <p>Asignaciones</p>
+                </div>
+            </div>
+        </div>
+        
+        <?php if (isset($error)): ?>
+            <div class="alert alert-danger">
+                <i class="fa fa-exclamation-triangle"></i>
+                Error al cargar información del ACL: <?php echo h($error); ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

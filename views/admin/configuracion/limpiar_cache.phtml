@@ -1,0 +1,104 @@
+<div class="container-fluid">
+    <div class="page-header">
+        <h1><?= $title ?></h1>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Limpiar Cache del Sistema</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="alert alert-warning">
+                        <strong><i class="glyphicon glyphicon-warning-sign"></i> Advertencia:</strong>
+                        La limpieza de cache puede afectar temporalmente el rendimiento del sistema mientras 
+                        se regeneran los datos cacheados.
+                    </div>
+                    
+                    <form method="post" action="">
+                        <div class="form-group">
+                            <label>Seleccione qué cache desea limpiar:</label><br>
+                            
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="tipos[]" value="vistas" checked>
+                                    <strong>Cache de Vistas</strong><br>
+                                    <small class="text-muted">Archivos .phtml compilados. Limpiar después de modificar vistas.</small>
+                                </label>
+                            </div>
+                            
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="tipos[]" value="datos" checked>
+                                    <strong>Cache de Datos</strong><br>
+                                    <small class="text-muted">Resultados de consultas y datos cacheados.</small>
+                                </label>
+                            </div>
+                            
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="tipos[]" value="config">
+                                    <strong>Cache de Configuración</strong><br>
+                                    <small class="text-muted">Archivos de configuración cacheados.</small>
+                                </label>
+                            </div>
+                            
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="tipos[]" value="acl">
+                                    <strong>Cache de ACL</strong><br>
+                                    <small class="text-muted">Permisos y reglas de acceso.</small>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="agresivo" value="1">
+                                    <strong>Modo Agresivo</strong><br>
+                                    <small class="text-muted">Forzar regeneración completa de cache. Usar solo si hay problemas.</small>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">Información de Cache Actual</h4>
+                            </div>
+                            <div class="panel-body">
+                                <?php if (isset($cache_info) && is_array($cache_info)): ?>
+                                    <ul>
+                                        <?php foreach ($cache_info as $tipo => $info): ?>
+                                            <li>
+                                                <strong><?= ucfirst($tipo) ?>:</strong> 
+                                                <?= $info['count'] ?? 0 ?> archivos, 
+                                                <?= $this->formatBytes($info['size'] ?? 0) ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php else: ?>
+                                    <p class="text-muted">No se pudo obtener información de cache.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-danger">
+                            <strong>Confirmación requerida:</strong> Esta acción no se puede deshacer.
+                        </div>
+                        
+                        <button type="submit" name="confirmar" class="btn btn-danger btn-lg">
+                            <i class="glyphicon glyphicon-trash"></i> CONFIRMAR LIMPIEZA DE CACHE
+                        </button>
+                        <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-default">
+                            <i class="glyphicon glyphicon-remove"></i> Cancelar
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

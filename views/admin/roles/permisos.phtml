@@ -1,0 +1,188 @@
+a<div class="container-fluid">
+    <div class="page-header">
+        <h1><?= $title ?></h1>
+        <p class="lead">Asigne permisos al rol: <strong><?= htmlspecialchars($rol['nombre']) ?></strong></p>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <form method="post" action="">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Selección de Permisos</h3>
+                    </div>
+                    <div class="panel-body">
+                        <?php if (empty($permisos_agrupados)): ?>
+                            <div class="alert alert-warning">
+                                No hay permisos disponibles en el sistema.
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($permisos_agrupados as $modulo => $categorias): ?>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <input type="checkbox" class="select-modulo" data-modulo="<?= $modulo ?>">
+                                        <strong><?= ucfirst($modulo) ?></strong>
+                                    </h4>
+                                </div>
+                                <div class="panel-body">
+                                    <?php foreach ($categorias as $categoria => $permisos): ?>
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h5 class="panel-title">
+                                                <input type="checkbox" class="select-categoria" data-modulo="<?= $modulo ?>" data-categoria="<?= $categoria ?>">
+                                                <strong><?= ucfirst($categoria) ?></strong>
+                                            </h5>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <?php foreach ($permisos as $permiso): ?>
+                                                <div class="col-md-4">
+                                                    <div class="checkbox">
+                                                        <label>
+                                                            <input type="checkbox" 
+                                                                   name="permisos[]" 
+                                                                   value="<?= $permiso['id'] ?>"
+                                                                   class="permiso-checkbox"
+                                                                   data-modulo="<?= $modulo ?>"
+                                                                   data-categoria="<?= $categoria ?>"
+                                                                   <?= in_array($permiso['id'], $permisos_ids) ? 'checked' : '' ?>>
+                                                            <strong><?= htmlspecialchars($permiso['nombre']) ?></strong>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                <code><?= $permiso['codigo'] ?></code>
+                                                                <?php if ($permiso['descripcion']): ?>
+                                                                    <br><?= htmlspecialchars($permiso['descripcion']) ?>
+                                                                <?php endif; ?>
+                                                            </small>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                            
+                            <div class="well">
+                                <h4>Resumen</h4>
+                                <p>
+                                    Permisos seleccionados: <span id="total-seleccionados">0</span> / 
+                                    Total permisos: <span id="total-permisos">0</span>
+                                </p>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-default" id="select-all">
+                                        <i class="glyphicon glyphicon-check"></i> Seleccionar Todos
+                                    </button>
+                                    <button type="button" class="btn btn-default" id="deselect-all">
+                                        <i class="glyphicon glyphicon-unchecked"></i> Deseleccionar Todos
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-body text-center">
+                        <button type="submit" name="asignar" class="btn btn-primary btn-lg">
+                            <i class="glyphicon glyphicon-save"></i> Guardar Permisos
+                        </button>
+                        <a href="<?= PUBLIC_PATH ?>roles/ver/<?= $rol['id'] ?>" class="btn btn-default">
+                            <i class="glyphicon glyphicon-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Contar permisos
+    function actualizarContadores() {
+        var total = $('.permiso-checkbox').length;
+        var seleccionados = $('.permiso-checkbox:checked').length;
+        
+        $('#total-permisos').text(total);
+        $('#total-seleccionados').text(seleccionados);
+    }
+    
+    // Seleccionar todos los permisos
+    $('#select-all').click(function() {
+        $('.permiso-checkbox').prop('checked', true);
+        actualizarContadores();
+    });
+    
+    // Deseleccionar todos los permisos
+    $('#deselect-all').click(function() {
+        $('.permiso-checkbox').prop('checked', false);
+        actualizarContadores();
+    });
+    
+    // Seleccionar todos los permisos de un módulo
+    $('.select-modulo').change(function() {
+        var modulo = $(this).data('modulo');
+        var checked = $(this).prop('checked');
+        
+        $('.permiso-checkbox[data-modulo="' + modulo + '"]').prop('checked', checked);
+        $('.select-categoria[data-modulo="' + modulo + '"]').prop('checked', checked);
+        
+        actualizarContadores();
+    });
+    
+    // Seleccionar todos los permisos de una categoría
+    $('.select-categoria').change(function() {
+        var modulo = $(this).data('modulo');
+        var categoria = $(this).data('categoria');
+        var checked = $(this).prop('checked');
+        
+        $('.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]')
+            .prop('checked', checked);
+        
+        // Verificar si todos los permisos del módulo están seleccionados
+        var totalModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]').length;
+        var seleccionadosModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]:checked').length;
+        
+        $('.select-modulo[data-modulo="' + modulo + '"]')
+            .prop('checked', totalModulo === seleccionadosModulo);
+        
+        actualizarContadores();
+    });
+    
+    // Cuando se cambia un permiso individual
+    $('.permiso-checkbox').change(function() {
+        var modulo = $(this).data('modulo');
+        var categoria = $(this).data('categoria');
+        
+        // Verificar categoría
+        var totalCategoria = $('.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]').length;
+        var seleccionadosCategoria = $('.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]:checked').length;
+        
+        $('.select-categoria[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]')
+            .prop('checked', totalCategoria === seleccionadosCategoria);
+        
+        // Verificar módulo
+        var totalModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]').length;
+        var seleccionadosModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]:checked').length;
+        
+        $('.select-modulo[data-modulo="' + modulo + '"]')
+            .prop('checked', totalModulo === seleccionadosModulo);
+        
+        actualizarContadores();
+    });
+    
+    // Inicializar contadores
+    actualizarContadores();
+});
+</script>

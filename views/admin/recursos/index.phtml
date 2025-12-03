@@ -1,0 +1,89 @@
+<!-- app/views/recursos/index.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-cubes"></i> Gestión de Recursos
+        <div class="pull-right">
+            <?php echo Html::link('admin/recursos/crear', '<i class="fa fa-plus"></i> Nuevo Recurso', 'class="btn btn-success"'); ?>
+            <?php echo Html::link('admin/recursos/sincronizar', '<i class="fa fa-refresh"></i> Sincronizar', 'class="btn btn-info"'); ?>
+        </div>
+    </h2>
+</div>
+
+<!-- Barra de búsqueda -->
+<div class="panel panel-default">
+    <div class="panel-body">
+        <?php echo Form::open('admin/recursos/buscar', 'method="get" class="form-inline"'); ?>
+        
+        <div class="form-group">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Buscar recursos..." 
+                       value="<?php echo isset($termino_busqueda) ? h($termino_busqueda) : ''; ?>">
+                <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </span>
+            </div>
+        </div>
+        
+        <?php if (isset($termino_busqueda) && $termino_busqueda): ?>
+            <?php echo Html::link('admin/recursos/index', 'Limpiar búsqueda', 'class="btn btn-default"'); ?>
+        <?php endif; ?>
+        
+        <?php echo Form::close(); ?>
+    </div>
+</div>
+
+<?php if ($recursos && count($recursos) > 0): ?>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Módulo</th>
+                <th>Controlador</th>
+                <th>Acción</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($recursos as $recurso): ?>
+                <tr class="<?php echo $recurso->activo ? '' : 'danger'; ?>">
+                    <td><?php echo $recurso->id; ?></td>
+                    <td>
+                        <strong><?php echo h($recurso->nombre); ?></strong>
+                    </td>
+                    <td><?php echo h($recurso->modulo); ?></td>
+                    <td><?php echo h($recurso->controlador); ?></td>
+                    <td><?php echo h($recurso->accion); ?></td>
+                    <td><?php echo ViewHelper::truncar(h($recurso->descripcion), 50); ?></td>
+                    <td>
+                        <?php if ($recurso->activo): ?>
+                            <span class="label label-success">
+                                <i class="fa fa-check"></i> Activo
+                            </span>
+                        <?php else: ?>
+                            <span class="label label-danger">
+                                <i class="fa fa-times"></i> Inactivo
+                            </span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php echo Html::link('admin/recursos/ver/' . $recurso->id, '<i class="fa fa-eye"></i>', 'class="btn btn-xs btn-info" title="Ver"'); ?>
+                        <?php echo Html::link('admin/recursos/editar/' . $recurso->id, '<i class="fa fa-edit"></i>', 'class="btn btn-xs btn-primary" title="Editar"'); ?>
+                        <?php echo Html::link('admin/recursos/toggle_activo/' . $recurso->id, '<i class="fa fa-power-off"></i>', 'class="btn btn-xs btn-warning" title="' . ($recurso->activo ? 'Desactivar' : 'Activar') . '"'); ?>
+                        <?php echo Html::link('admin/recursos/eliminar/' . $recurso->id, '<i class="fa fa-trash"></i>', 'class="btn btn-xs btn-danger btn-delete" title="Eliminar"'); ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php else: ?>
+    <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i> No hay recursos definidos.
+        <?php echo Html::link('admin/recursos/crear', 'Crear el primer recurso'); ?> o
+        <?php echo Html::link('admin/recursos/sincronizar', 'sincronizar desde configuración'); ?>
+    </div>
+<?php endif; ?>

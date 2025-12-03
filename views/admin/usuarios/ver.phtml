@@ -1,0 +1,313 @@
+<!-- app/views/usuarios/ver.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-user"></i> Detalle de Usuario
+        <div class="pull-right">
+            <?php echo Html::link('admin/usuarios/editar/' . $usuario->id, '<i class="fa fa-edit"></i> Editar', 'class="btn btn-primary"'); ?>
+            <?php echo Html::link('admin/usuarios/permisos/' . $usuario->id, '<i class="fa fa-key"></i> Permisos', 'class="btn btn-warning"'); ?>
+            <?php echo Html::link('admin/usuarios/index', '<i class="fa fa-arrow-left"></i> Volver', 'class="btn btn-default"'); ?>
+        </div>
+    </h2>
+</div>
+
+<div class="row">
+    <!-- Información Principal -->
+    <div class="col-md-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-info-circle"></i> Información del Usuario
+                </h3>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th width="40%">ID:</th>
+                                <td><?php echo $usuario->id; ?></td>
+                            </tr>
+                            <tr>
+                                <th>Código:</th>
+                                <td>
+                                    <strong><?php echo h($usuario->codigo); ?></strong>
+                                    <?php if ($usuario->auth_method == 'remote_user'): ?>
+                                        <span class="label label-info pull-right">REMOTE_USER</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Nombre:</th>
+                                <td><?php echo h($usuario->nombre); ?></td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>
+                                    <?php echo h($usuario->email); ?>
+                                    <?php if ($usuario->email): ?>
+                                        <a href="mailto:<?php echo h($usuario->email); ?>" class="btn btn-xs btn-default pull-right">
+                                            <i class="fa fa-envelope"></i> Enviar email
+                                        </a>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th width="40%">Rol:</th>
+                                <td>
+                                    <span class="label label-<?php $nivel = Roles::getById($usuario->rol_id)->nivel; echo $nivel >= 90 ? 'danger' : ($nivel >= 50 ? 'warning' : 'info'); ?>">
+                                        <?php echo h(Roles::getById($usuario->rol_id)->nombre); ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Estado:</th>
+                                <td>
+                                    <?php if ($usuario->activo): ?>
+                                        <span class="label label-success">
+                                            <i class="fa fa-check"></i> Activo
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="label label-danger">
+                                            <i class="fa fa-times"></i> Inactivo
+                                        </span>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($usuario->id != $current_user['id']): ?>
+                                        <div class="pull-right">
+                                            <?php echo Html::link('admin/usuarios/toggle_activo/' . $usuario->id, 
+                                                $usuario->activo ? 'Desactivar' : 'Activar', 
+                                                'class="btn btn-xs ' . ($usuario->activo ? 'btn-warning' : 'btn-success') . '"'
+                                            ); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Método Auth:</th>
+                                <td>
+                                    <span class="label label-default"><?php echo h($usuario->auth_method); ?></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Creado:</th>
+                                <td><?php echo date('d/m/Y H:i', strtotime($usuario->created_at)); ?></td>
+                            </tr>
+                            <tr>
+                                <th>Último acceso:</th>
+                                <td>
+                                    <?php if ($usuario->ultimo_acceso_at): ?>
+                                        <?php echo date('d/m/Y H:i', strtotime($usuario->ultimo_acceso_at)); ?>
+                                        <small class="text-muted">
+                                            (<?php echo ViewHelper::timeAgo($usuario->ultimo_acceso_at); ?>)
+                                        </small>
+                                    <?php else: ?>
+                                        <span class="text-muted">Nunca</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Permisos del Usuario -->
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-key"></i> Permisos Asignados
+                    <span class="badge"><?php echo count($permisos_usuario); ?></span>
+                </h3>
+            </div>
+            <div class="panel-body">
+                <?php if (count($permisos_usuario) > 0): ?>
+                    <div class="row">
+                        <?php foreach ($permisos_usuario as $permiso): ?>
+                            <div class="col-md-6">
+                                <div class="well well-sm">
+                                    <strong><?php echo h($permiso->nombre); ?></strong>
+                                    <?php echo Html::link('permisos/recursos/' . $permiso->id, 
+                                        '<i class="fa fa-external-link"></i>', 
+                                        'class="btn btn-xs btn-default pull-right" title="Ver recursos"'
+                                    ); ?>
+                                    <br>
+                                    <small class="text-muted"><?php echo h($permiso->descripcion); ?></small>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i> Este usuario no tiene permisos directos asignados.
+                        Solo tiene los permisos asociados a su rol <strong><?php echo h($usuario->rol); ?></strong>.
+                    </div>
+                <?php endif; ?>
+                
+                <div class="text-center">
+                    <?php echo Html::link('admin/usuarios/permisos/' . $usuario->id, 
+                        '<i class="fa fa-key"></i> Gestionar Permisos', 
+                        'class="btn btn-warning"'
+                    ); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar con Acciones y Logs -->
+    <div class="col-md-4">
+        <!-- Acciones Rápidas -->
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-bolt"></i> Acciones Rápidas</h3>
+            </div>
+            <div class="panel-body">
+                <div class="list-group">
+                    <?php echo Html::link('admin/usuarios/editar/' . $usuario->id, 
+                        '<i class="fa fa-edit"></i> Editar Información', 
+                        'class="list-group-item"'
+                    ); ?>
+                    
+                    <?php echo Html::link('admin/usuarios/permisos/' . $usuario->id, 
+                        '<i class="fa fa-key"></i> Modificar Permisos', 
+                        'class="list-group-item"'
+                    ); ?>
+                    
+                    <?php if ($usuario->auth_method == 'email'): ?>
+                        <?php echo Html::link('#', 
+                            '<i class="fa fa-envelope"></i> Enviar Email de Bienvenida', 
+                            'class="list-group-item" onclick="alert(\'Función en desarrollo\'); return false;"'
+                        ); ?>
+                        
+                        <?php echo Html::link('#', 
+                            '<i class="fa fa-unlock-alt"></i> Restablecer Contraseña', 
+                            'class="list-group-item" onclick="alert(\'Función en desarrollo\'); return false;"'
+                        ); ?>
+                    <?php endif; ?>
+                    
+                    <?php if ($usuario->id != $current_user['id']): ?>
+                        <?php echo Html::link('admin/usuarios/eliminar/' . $usuario->id, 
+                            '<i class="fa fa-trash"></i> Eliminar Usuario', 
+                            'class="list-group-item text-danger btn-delete"'
+                        ); ?>
+                    <?php else: ?>
+                        <a href="#" class="list-group-item text-muted" disabled>
+                            <i class="fa fa-trash"></i> Eliminar Usuario
+                            <small class="pull-right">(no disponible)</small>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Últimos Accesos -->
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-history"></i> Historial de Accesos</h3>
+            </div>
+            <div class="panel-body">
+                <?php if (count($logs_acceso) > 0): ?>
+                    <ul class="list-unstyled">
+                        <?php foreach ($logs_acceso as $log): ?>
+                            <li style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                                <small class="text-muted">
+                                    <?php echo date('d/m H:i', strtotime($log->fecha)); ?>
+                                </small><br>
+                                <strong><?php echo h($log->accion); ?></strong><br>
+                                <small>
+                                    <i class="fa fa-globe"></i> <?php echo h($log->ip); ?>
+                                    <?php if ($log->user_agent): ?>
+                                        <br><i class="fa fa-desktop"></i> <?php echo substr(h($log->user_agent), 0, 50); ?>...
+                                    <?php endif; ?>
+                                </small>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i> No hay registros de acceso disponibles.
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (count($logs_acceso) >= 10): ?>
+                    <div class="text-center">
+                        <a href="#" class="btn btn-xs btn-default">
+                            <i class="fa fa-list"></i> Ver historial completo
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <!-- Información del Rol -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-users"></i> Información del Rol
+                </h3>
+            </div>
+            <div class="panel-body">
+                <p>
+                    <strong>Rol actual:</strong> 
+                    <span class="label label-<?php echo $usuario->rol == 'admin' ? 'danger' : ($usuario->rol == 'editor' ? 'warning' : 'info'); ?>">
+                        <?php echo h($usuario->rol); ?>
+                    </span>
+                </p>
+                
+                <?php if ($usuario->rol == 'admin'): ?>
+                    <div class="alert alert-danger">
+                        <i class="fa fa-shield"></i>
+                        <strong>Administrador:</strong> Acceso completo al sistema.
+                    </div>
+                <?php elseif ($usuario->rol == 'editor'): ?>
+                    <div class="alert alert-warning">
+                        <i class="fa fa-edit"></i>
+                        <strong>Editor:</strong> Puede crear y editar contenido.
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fa fa-user"></i>
+                        <strong>Usuario:</strong> Acceso básico según permisos.
+                    </div>
+                <?php endif; ?>
+                
+                <p>
+                    Para cambiar el rol del usuario, 
+                    <?php echo Html::link('admin/usuarios/editar/' . $usuario->id, 'edita su información'); ?>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php 
+// Función helper para mostrar tiempo relativo
+function timeAgo($datetime) {
+    $time = strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    
+    if ($diff < 60) {
+        return 'hace ' . $diff . ' segundos';
+    } elseif ($diff < 3600) {
+        $minutos = floor($diff / 60);
+        return 'hace ' . $minutos . ' minuto' . ($minutos != 1 ? 's' : '');
+    } elseif ($diff < 86400) {
+        $horas = floor($diff / 3600);
+        return 'hace ' . $horas . ' hora' . ($horas != 1 ? 's' : '');
+    } elseif ($diff < 2592000) {
+        $dias = floor($diff / 86400);
+        return 'hace ' . $dias . ' día' . ($dias != 1 ? 's' : '');
+    } elseif ($diff < 31536000) {
+        $meses = floor($diff / 2592000);
+        return 'hace ' . $meses . ' mes' . ($meses != 1 ? 'es' : '');
+    } else {
+        $anos = floor($diff / 31536000);
+        return 'hace ' . $anos . ' año' . ($anos != 1 ? 's' : '');
+    }
+}
+?>

@@ -1,0 +1,69 @@
+<!-- app/views/usuarios/index.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-users"></i> Gestión de Usuarios
+        <?php echo Html::link('admin/usuarios/crear', '<i class="fa fa-plus"></i> Nuevo Usuario', 'class="btn btn-success pull-right"'); ?>
+    </h2>
+</div>
+
+<?php if ($usuarios && count($usuarios) > 0): ?>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Método Auth</th>
+                <th>Último Acceso</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($usuarios as $usuario): ?>
+                <tr>
+                    <td><?php echo $usuario->id; ?></td>
+                    <td><strong><?php echo h($usuario->codigo); ?></strong></td>
+                    <td><?php echo h($usuario->nombre); ?></td>
+                    <td><?php echo h($usuario->email); ?></td>
+                    <td>
+                        <span class="label label-<?php $nivel = Roles::getById($usuario->rol_id)->nivel; echo ($nivel >= 90 ? 'danger' : ($nivel >= 50 ? 'warning' : 'info')); ?>">
+                            <?php echo h(Roles::getById($usuario->rol_id)->codigo); ?>
+                        </span>
+                    </td>
+                    <td>
+                        <?php if ($usuario->activo): ?>
+                            <span class="label label-success"><i class="fa fa-check"></i> Activo</span>
+                        <?php else: ?>
+                            <span class="label label-danger"><i class="fa fa-times"></i> Inactivo</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <span class="label label-default"><?php echo h($usuario->auth_method); ?></span>
+                    </td>
+                    <td>
+                        <?php echo $usuario->ultimo_acceso_at ? date('d/m/Y H:i', strtotime($usuario->ultimo_acceso_at)) : 'Nunca'; ?>
+                    </td>
+                    <td>
+                        <?php echo Html::link('admin/usuarios/ver/' . $usuario->id, '<i class="fa fa-eye"></i>', 'class="btn btn-xs btn-info" title="Ver"'); ?>
+                        <?php echo Html::link('admin/usuarios/editar/' . $usuario->id, '<i class="fa fa-edit"></i>', 'class="btn btn-xs btn-primary" title="Editar"'); ?>
+                        <?php echo Html::link('admin/usuarios/permisos/' . $usuario->id, '<i class="fa fa-key"></i>', 'class="btn btn-xs btn-warning" title="Asignar Permisos"'); ?>
+                        <?php if ($usuario->id != $current_user['id']): ?>
+                            <?php echo Html::link('admin/usuarios/eliminar/' . $usuario->id, '<i class="fa fa-trash"></i>', 'class="btn btn-xs btn-danger btn-delete" title="Eliminar"'); ?>
+                        <?php else: ?>
+                            <button class="btn btn-xs btn-default" disabled title="No puede eliminarse a sí mismo">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php else: ?>
+    <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i> No hay usuarios registrados.
+    </div>
+<?php endif; ?>

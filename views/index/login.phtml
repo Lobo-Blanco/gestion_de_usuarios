@@ -1,0 +1,206 @@
+<!-- app/views/index/login.phtml -->
+<div class="row justify-content-center" id="login-section">
+    <div class="col-lg-10">
+        <?php View::content(); ?>
+        
+        <div class="row g-4">
+            <!-- Formulario de Login -->
+            <div class="col-lg-6">
+                <div class="card card-elegant h-100">
+                    <div class="card-header card-header-elegant">
+                        <h3 class="mb-0"><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión</h3>
+                    </div>
+                    <div class="card-body card-body-elegant">
+                        <p class="text-muted mb-4">Ingresa con tu código de 8 dígitos y contraseña</p>
+                        
+                        <?php echo Form::open('index/login', 'post', 'class="needs-validation" novalidate'); ?>
+                        
+                        <div class="mb-3">
+                            <label for="codigo" class="form-label">
+                                <i class="bi bi-person-badge me-1"></i>Código de Usuario
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-123"></i></span>
+                                <?php echo Form::text('codigo', 'class="form-control form-control-custom" id="codigo" required maxlength="8" minlength="8" pattern="[A-Za-z0-9]{8}" placeholder="Ej: ABC12345"'); ?>
+                            </div>
+                            <div class="form-text">8 caracteres alfanuméricos</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-key me-1"></i>Contraseña
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <?php echo Form::password('password', 'class="form-control form-control-custom" id="password" required placeholder="Tu contraseña"'); ?>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <?php echo Form::check('remember', '1', 'class="form-check-input" id="remember"'); ?>
+                            <label class="form-check-label" for="remember">
+                                Recordar mi sesión
+                            </label>
+                        </div>
+                        
+                        <input type="hidden" name="mode" value="auth">
+                        
+                        <div class="d-grid gap-2">
+                            <?php echo Form::submit('Ingresar al Sistema', 'class="btn btn-primary-custom btn-lg"'); ?>
+                        </div>
+                        
+                        <?php if (Config::get('auth.allow_restore_password_by_email', false)): ?>
+                        <div class="text-center mt-3">
+                            <?php echo Html::link('password/forgot', '¿Olvidaste tu contraseña?', 'class="text-decoration-none"'); ?>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <?php echo Form::close(); ?>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulario de Registro -->
+            <?php if (Config::get('auth.allow_registration', true)): ?>
+            <div class="col-lg-6" id="register-section">
+                <div class="card card-elegant h-100">
+                    <div class="card-header card-header-elegant">
+                        <h3 class="mb-0"><i class="bi bi-person-plus me-2"></i>Registrarse</h3>
+                    </div>
+                    <div class="card-body card-body-elegant">
+                        <p class="text-muted mb-4">Crea tu cuenta en el sistema</p>
+                        
+                        <?php echo Form::open('index/register', 'class="needs-validation" novalidate'); ?>
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="reg_codigo" class="form-label">
+                                    <i class="bi bi-person-badge me-1"></i>Código de Usuario
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-123"></i></span>
+                                    <?php echo Form::text('codigo', 'class="form-control form-control-custom" id="reg_codigo" required maxlength="8" minlength="8" pattern="[A-Za-z0-9]{8}" placeholder="8 caracteres únicos"'); ?>
+                                </div>
+                                <div class="form-text">Este será tu identificador para ingresar</div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="reg_nombre" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Nombre Completo
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-circle"></i></span>
+                                    <?php echo Form::text('nombre', 'class="form-control form-control-custom" id="reg_nombre" required placeholder="Tu nombre completo"'); ?>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="reg_email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i>Email
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <?php echo Form::email('email', 'class="form-control form-control-custom" id="reg_email" required placeholder="tu@email.com"'); ?>
+                                </div>
+                                <div class="form-text">Para recuperación de contraseña</div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="reg_password" class="form-label">
+                                    <i class="bi bi-key me-1"></i>Contraseña
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <?php echo Form::password('password', 'class="form-control form-control-custom" id="reg_password" required placeholder="Crea una contraseña segura"'); ?>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleRegPassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Mínimo 6 caracteres</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <?php echo Form::submit('Crear Cuenta', 'class="btn btn-success btn-lg"'); ?>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                Al registrarte, aceptas nuestros 
+                                <a href="#" class="text-decoration-none">Términos y Condiciones</a>
+                            </small>
+                        </div>
+                        
+                        <?php echo Form::close(); ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle para mostrar/ocultar contraseña
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+        }
+        
+        // Toggle para contraseña de registro
+        const toggleRegPassword = document.getElementById('toggleRegPassword');
+        const regPasswordInput = document.getElementById('reg_password');
+        
+        if (toggleRegPassword) {
+            toggleRegPassword.addEventListener('click', function() {
+                const type = regPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                regPasswordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+        }
+        
+        // Validación de formularios
+        const forms = document.querySelectorAll('.needs-validation');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+        });
+        
+        // Validación en tiempo real para código
+        const codigoInput = document.getElementById('codigo');
+        if (codigoInput) {
+            codigoInput.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+                if (this.value.length === 8) {
+                    this.classList.add('is-valid');
+                    this.classList.remove('is-invalid');
+                } else {
+                    this.classList.remove('is-valid');
+                }
+            });
+        }
+        
+        // Validación para código de registro
+        const regCodigoInput = document.getElementById('reg_codigo');
+        if (regCodigoInput) {
+            regCodigoInput.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        }
+    });
+</script>

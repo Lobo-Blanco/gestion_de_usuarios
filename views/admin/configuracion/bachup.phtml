@@ -1,0 +1,123 @@
+<div class="container-fluid">
+    <div class="page-header">
+        <h1><?= $title ?></h1>
+        <p class="lead">Gestión de backups de la base de datos</p>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Generar Nuevo Backup</h3>
+                </div>
+                <div class="panel-body">
+                    <form method="post" action="">
+                        <div class="form-group">
+                            <label for="backup_type">Tipo de Backup</label>
+                            <select class="form-control" id="backup_type" name="backup_type">
+                                <option value="full">Completo (todas las tablas)</option>
+                                <option value="data">Solo datos (sin estructura)</option>
+                                <option value="schema">Solo estructura (sin datos)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="backup_compress">Compresión</label>
+                            <select class="form-control" id="backup_compress" name="backup_compress">
+                                <option value="0">Sin compresión (.sql)</option>
+                                <option value="1">Comprimido (.sql.gz)</option>
+                            </select>
+                            <small class="text-muted">La compresión reduce el tamaño pero requiere más tiempo</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="include_drop" value="1" checked>
+                                    Incluir sentencias DROP TABLE
+                                </label>
+                                <small class="text-muted">Agrega "DROP TABLE IF EXISTS" antes de cada CREATE TABLE</small>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <strong>Estimado:</strong> El backup puede tardar varios minutos dependiendo del tamaño de la base de datos.
+                            No cierre esta página durante el proceso.
+                        </div>
+                        
+                        <button type="submit" name="generar_backup" class="btn btn-primary btn-lg">
+                            <i class="glyphicon glyphicon-hdd"></i> Generar Backup Ahora
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Backups Existentes</h3>
+                </div>
+                <div class="panel-body">
+                    <?php if (empty($backups)): ?>
+                        <div class="alert alert-info">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            No hay backups generados todavía.
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Archivo</th>
+                                        <th>Tamaño</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($backups as $backup): ?>
+                                    <tr>
+                                        <td>
+                                            <code><?= htmlspecialchars($backup['nombre']) ?></code>
+                                        </td>
+                                        <td><?= $this->formatBytes($backup['tamano']) ?></td>
+                                        <td><?= date('d/m/Y H:i', $backup['fecha']) ?></td>
+                                        <td>
+                                            <a href="<?= PUBLIC_PATH ?>configuracion/descargar_backup/<?= urlencode($backup['nombre']) ?>" 
+                                               class="btn btn-xs btn-success" title="Descargar">
+                                                <i class="glyphicon glyphicon-download"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-xs btn-danger" 
+                                                    onclick="confirmDelete('<?= $backup['nombre'] ?>')" title="Eliminar">
+                                                <i class="glyphicon glyphicon-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            Los backups se almacenan en: <code><?= APP_PATH ?>backups/</code><br>
+                            Se mantienen automáticamente los últimos 30 backups.
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(filename) {
+    if (confirm('¿Está seguro de eliminar el backup "' + filename + '"? Esta acción no se puede deshacer.')) {
+        // Aquí iría la llamada AJAX para eliminar el backup
+        alert('Funcionalidad de eliminación en desarrollo. Por ahora elimine manualmente desde el servidor.');
+    }
+}
+</script>

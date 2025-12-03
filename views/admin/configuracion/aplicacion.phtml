@@ -1,0 +1,386 @@
+<!-- app/views/configuracion/aplicacion.phtml -->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-2 text-gray-800"><?= $title ?></h1>
+            <p class="mb-4">Configura los parámetros generales de la aplicación.</p>
+        </div>
+    </div>
+
+    <?php View::partial('flash') ?>
+
+    <form method="post" action="<?= PUBLIC_PATH ?>configuracion/aplicacion">
+        
+        <!-- Información básica -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Información Básica</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="app_name">Nombre de la Aplicación *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="app_name"
+                                   name="app_name" 
+                                   required
+                                   value="<?= htmlspecialchars($config_app['name'] ?? '') ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="app_version">Versión *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="app_version"
+                                   name="app_version" 
+                                   required
+                                   pattern="^\d+\.\d+(\.\d+)?$"
+                                   value="<?= htmlspecialchars($config_app['version'] ?? '1.0.0') ?>">
+                            <small class="form-text text-muted">Formato: X.Y.Z (ej: 1.0.0)</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="app_url">URL de la Aplicación *</label>
+                            <input type="url" 
+                                   class="form-control" 
+                                   id="app_url"
+                                   name="app_url" 
+                                   required
+                                   value="<?= htmlspecialchars($config_app['url'] ?? '') ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Modo Debug</label>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" 
+                                       class="custom-control-input" 
+                                       id="app_debug"
+                                       name="app_debug" 
+                                       value="1"
+                                       <?= ($config_app['debug'] ?? false) ? 'checked' : '' ?>
+                                       data-toggle="tooltip"
+                                       title="Solo habilitar en desarrollo">
+                                <label class="custom-control-label" for="app_debug">
+                                    Habilitar modo debug
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración regional -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Configuración Regional</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="app_timezone">Zona Horaria *</label>
+                            <select class="form-control select2" 
+                                    id="app_timezone"
+                                    name="app_timezone" 
+                                    required>
+                                <?php foreach ($timezones as $tz): ?>
+                                <option value="<?= $tz ?>" 
+                                        <?= ($config_app['timezone'] ?? '') == $tz ? 'selected' : '' ?>>
+                                    <?= $tz ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="app_locale">Idioma/Localización *</label>
+                            <select class="form-control select2" 
+                                    id="app_locale"
+                                    name="app_locale" 
+                                    required>
+                                <?php foreach ($locales as $code => $name): ?>
+                                <option value="<?= $code ?>" 
+                                        <?= ($config_app['locale'] ?? '') == $code ? 'selected' : '' ?>>
+                                    <?= $name ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="app_charset">Codificación de Caracteres *</label>
+                            <select class="form-control" 
+                                    id="app_charset"
+                                    name="app_charset" 
+                                    required>
+                                <option value="UTF-8" <?= ($config_app['charset'] ?? '') == 'UTF-8' ? 'selected' : '' ?>>UTF-8</option>
+                                <option value="ISO-8859-1" <?= ($config_app['charset'] ?? '') == 'ISO-8859-1' ? 'selected' : '' ?>>ISO-8859-1</option>
+                                <option value="Windows-1252" <?= ($config_app['charset'] ?? '') == 'Windows-1252' ? 'selected' : '' ?>>Windows-1252</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modo de mantenimiento -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Modo de Mantenimiento</h6>
+                <button type="submit" 
+                        name="toggle_maintenance" 
+                        class="btn btn-<?= ($config_app['maintenance']['enabled'] ?? false) ? 'success' : 'warning' ?>">
+                    <?= ($config_app['maintenance']['enabled'] ?? false) ? 'Desactivar' : 'Activar' ?> Mantenimiento
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="maintenance_message">Mensaje de Mantenimiento</label>
+                            <textarea class="form-control" 
+                                      id="maintenance_message"
+                                      name="maintenance_message" 
+                                      rows="3"><?= htmlspecialchars($config_app['maintenance']['message'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="maintenance_allowed_ips">IPs Permitidas</label>
+                            <textarea class="form-control" 
+                                      id="maintenance_allowed_ips"
+                                      name="maintenance_allowed_ips" 
+                                      rows="3"
+                                      placeholder="Ej: 192.168.1.1&#10;      10.0.0.0/24"><?= htmlspecialchars(implode("\n", $config_app['maintenance']['allowed_ips'] ?? [])) ?></textarea>
+                            <small class="form-text text-muted">Una IP por línea. Se permiten rangos CIDR.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="maintenance_start_time">Inicio Programado</label>
+                            <input type="datetime-local" 
+                                   class="form-control" 
+                                   id="maintenance_start_time"
+                                   name="maintenance_start_time" 
+                                   value="<?= $config_app['maintenance']['start_time'] ?? '' ?>">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="maintenance_end_time">Fin Programado</label>
+                            <input type="datetime-local" 
+                                   class="form-control" 
+                                   id="maintenance_end_time"
+                                   name="maintenance_end_time" 
+                                   value="<?= $config_app['maintenance']['end_time'] ?? '' ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sistema de logs -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Sistema de Logs</h6>
+                <button type="submit" 
+                        name="clear_logs" 
+                        class="btn btn-outline-danger"
+                        onclick="return confirm('¿Eliminar todos los logs? Esta acción no se puede deshacer.')">
+                    <i class="fas fa-trash"></i> Limpiar Logs
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="log_level">Nivel de Log</label>
+                            <select class="form-control" id="log_level" name="log_level">
+                                <option value="debug" <?= ($config_app['log']['level'] ?? '') == 'debug' ? 'selected' : '' ?>>Debug</option>
+                                <option value="info" <?= ($config_app['log']['level'] ?? '') == 'info' ? 'selected' : '' ?>>Info</option>
+                                <option value="warning" <?= ($config_app['log']['level'] ?? '') == 'warning' ? 'selected' : '' ?>>Warning</option>
+                                <option value="error" <?= ($config_app['log']['level'] ?? '') == 'error' ? 'selected' : '' ?>>Error</option>
+                                <option value="critical" <?= ($config_app['log']['level'] ?? '') == 'critical' ? 'selected' : '' ?>>Critical</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="log_max_size">Tamaño máximo por archivo (bytes)</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="log_max_size"
+                                   name="log_max_size" 
+                                   min="1048576" 
+                                   step="1048576"
+                                   value="<?= $config_app['log']['max_size'] ?? 10485760 ?>">
+                            <small class="form-text text-muted">Default: 10MB (10485760 bytes)</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="log_max_files">Máximo de archivos</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="log_max_files"
+                                   name="log_max_files" 
+                                   min="1" 
+                                   max="100"
+                                   value="<?= $config_app['log']['max_files'] ?? 30 ?>">
+                            <small class="form-text text-muted">Archivos rotados a mantener</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Ruta actual de logs:</strong> 
+                            <?= htmlspecialchars($config_app['log']['path'] ?? APP_PATH . 'logs/') ?>
+                            <?php 
+                            $logPath = $config_app['log']['path'] ?? APP_PATH . 'logs/';
+                            if (is_dir($logPath)) {
+                                $files = glob($logPath . '*.log');
+                                echo ' (' . count($files) . ' archivos, ' . formatBytes(array_sum(array_map('filesize', $files))) . ')';
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del sistema -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Información del Sistema</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <?= $systemInfo['php_version'] ?>
+                                </div>
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    PHP Version
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <?= $systemInfo['kumbia_version'] ?>
+                                </div>
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    KumbiaPHP Version
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <?= $systemInfo['server'] ?>
+                                </div>
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Servidor Web
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="submit" name="guardar_app" class="btn btn-primary btn-icon-split">
+                            <span class="icon text-white-50">
+                                <i class="fas fa-save"></i>
+                            </span>
+                            <span class="text">Guardar Configuración</span>
+                        </button>
+
+                        <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-outline-secondary ml-2">
+                            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <button type="button" 
+                                class="btn btn-outline-info"
+                                onclick="testConfig()">
+                            <i class="fas fa-vial"></i> Probar Configuración
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Inicializar Select2
+// Versión Vanilla JS equivalente al código jQuery
+document.addEventListener('DOMContentLoaded', function() {
+    const selectElements = document.querySelectorAll('.select2');
+    
+    selectElements.forEach(function(selectElement) {
+        // Inicializar Select2 en cada elemento
+        $(selectElement).select2({
+            theme: 'bootstrap4',
+            width: '100%'
+        });
+    });
+});
+
+function testConfig() {
+    // Validación en tiempo real
+    const appName = document.getElementById('app_name').value;
+    const appUrl = document.getElementById('app_url').value;
+    
+    if (!appName || !appUrl) {
+        alert('Por favor complete los campos requeridos');
+        return;
+    }
+    
+    // Probar URL
+    fetch(appUrl)
+        .then(response => {
+            if (response.ok) {
+                alert('✅ Configuración básica correcta\nLa URL responde correctamente.');
+            } else {
+                alert('⚠️ La URL responde pero con error ' + response.status);
+            }
+        })
+        .catch(error => {
+            alert('❌ Error al acceder a la URL: ' + error.message);
+        });
+}
+</script>

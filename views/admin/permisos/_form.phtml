@@ -1,0 +1,39 @@
+<!-- app/views/permisos/crear.phtml y editar.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-key"></i> 
+        <?php echo isset($permiso) && $permiso->id ? 'Editar Permiso' : 'Nuevo Permiso'; ?>
+    </h2>
+</div>
+
+<?php echo Form::open(isset($permiso) && $permiso->id ? 'admin/permisos/actualizar/' . $permiso->id : 'admin/permisos/guardar'); ?>
+
+<?php if (isset($permiso) && $permiso->id): ?>
+    <?php echo Form::hidden('id', $permiso->id); ?>
+<?php endif; ?>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group  <?php echo Flash::has('error') && strpos(Flash::get('error'), 'nombre') !== false ? 'has-error' : ''; ?>">
+            <label for="nombre">Nombre del Permiso *</label>
+            <?php echo Form::text('nombre', 'class="form-control" required placeholder="Ej: ver_usuarios, editar_paginas"', isset($permiso) ? $permiso->nombre : ''); ?>
+            <small class="text-muted">Usar formato snake_case: ver_usuarios, editar_paginas</small>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <?php echo Form::textarea('descripcion', 'class="form-control" rows="3" placeholder="Descripción del permiso"', isset($permiso) ? $permiso->descripcion : ''); ?>
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <button type="submit" class="btn btn-primary">
+        <i class="fa fa-save"></i> Guardar Permiso
+    </button>
+    <?php echo Html::link('admin/permisos/index', 'Cancelar', 'class="btn btn-default"'); ?>
+</div>
+
+<?php echo Form::close(); ?>

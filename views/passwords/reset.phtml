@@ -1,0 +1,183 @@
+<!-- app/views/password/reset.phtml -->
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card card-elegant">
+            <div class="card-header card-header-elegant">
+                <h3 class="mb-0"><i class="bi bi-key-fill me-2"></i>Nueva Contraseña</h3>
+            </div>
+            <div class="card-body card-body-elegant">
+                <?php View::content(); ?>
+                
+                <div class="text-center mb-4">
+                    <div class="feature-icon text-success">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h4>Crear Nueva Contraseña</h4>
+                    <p class="text-muted">Crea una contraseña segura para tu cuenta</p>
+                </div>
+                
+                <?php echo Form::open('password/update_password', 'class="needs-validation" novalidate'); ?>
+                
+                <input type="hidden" name="token" value="<?php echo $token; ?>">
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        <i class="bi bi-lock me-1"></i>Nueva Contraseña
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <?php echo Form::password('password', 'class="form-control form-control-custom" id="password" required minlength="6" placeholder="Mínimo 6 caracteres"'); ?>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength mt-2">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted" id="passwordHint">Fortaleza de la contraseña</small>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="password_confirm" class="form-label">
+                        <i class="bi bi-lock-fill me-1"></i>Confirmar Contraseña
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                        <?php echo Form::password('password_confirm', 'class="form-control form-control-custom" id="password_confirm" required placeholder="Repite tu contraseña"'); ?>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePasswordConfirm">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-success" id="passwordMatch" style="display: none;">
+                            <i class="bi bi-check-circle"></i> Las contraseñas coinciden
+                        </small>
+                        <small class="text-danger" id="passwordMismatch" style="display: none;">
+                            <i class="bi bi-exclamation-circle"></i> Las contraseñas no coinciden
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <?php echo Form::submit('Establecer Nueva Contraseña', 'class="btn btn-success btn-lg" id="submitBtn" disabled'); ?>
+                    <a href="<?php echo Html::link('index/index'); ?>" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </a>
+                </div>
+                
+                <?php echo Form::close(); ?>
+                
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle me-2"></i>Consejos para una contraseña segura</h6>
+                        <ul class="small mb-0">
+                            <li>Usa al menos 8 caracteres</li>
+                            <li>Combina letras mayúsculas y minúsculas</li>
+                            <li>Incluye números y símbolos si es posible</li>
+                            <li>No uses información personal fácil de adivinar</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const password = document.getElementById('password');
+        const passwordConfirm = document.getElementById('password_confirm');
+        const passwordStrength = document.getElementById('passwordStrength');
+        const passwordHint = document.getElementById('passwordHint');
+        const passwordMatch = document.getElementById('passwordMatch');
+        const passwordMismatch = document.getElementById('passwordMismatch');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Toggle para mostrar/ocultar contraseñas
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+        });
+        
+        document.getElementById('togglePasswordConfirm').addEventListener('click', function() {
+            const type = passwordConfirm.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordConfirm.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+        });
+        
+        // Verificar fortaleza de contraseña
+        password.addEventListener('input', function() {
+            const pass = this.value;
+            let strength = 0;
+            let hint = '';
+            let color = '';
+            
+            // Longitud
+            if (pass.length >= 6) strength += 25;
+            if (pass.length >= 8) strength += 25;
+            
+            // Complejidad
+            if (/[A-Z]/.test(pass)) strength += 25;
+            if (/[0-9]/.test(pass)) strength += 25;
+            
+            // Determinar color y mensaje
+            if (strength < 25) {
+                color = 'danger';
+                hint = 'Muy débil';
+            } else if (strength < 50) {
+                color = 'warning';
+                hint = 'Débil';
+            } else if (strength < 75) {
+                color = 'info';
+                hint = 'Regular';
+            } else {
+                color = 'success';
+                hint = 'Fuerte';
+            }
+            
+            passwordStrength.style.width = strength + '%';
+            passwordStrength.className = 'progress-bar bg-' + color;
+            passwordHint.textContent = 'Fortaleza: ' + hint;
+            
+            // Verificar coincidencia
+            checkPasswordMatch();
+        });
+        
+        // Verificar que las contraseñas coincidan
+        passwordConfirm.addEventListener('input', checkPasswordMatch);
+        
+        function checkPasswordMatch() {
+            const pass1 = password.value;
+            const pass2 = passwordConfirm.value;
+            
+            if (pass2 === '') {
+                passwordMatch.style.display = 'none';
+                passwordMismatch.style.display = 'none';
+                submitBtn.disabled = true;
+                return;
+            }
+            
+            if (pass1 === pass2 && pass1.length >= 6) {
+                passwordMatch.style.display = 'block';
+                passwordMismatch.style.display = 'none';
+                submitBtn.disabled = false;
+            } else {
+                passwordMatch.style.display = 'none';
+                passwordMismatch.style.display = 'block';
+                submitBtn.disabled = true;
+            }
+        }
+        
+        // Validación del formulario
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            if (password.value !== passwordConfirm.value) {
+                e.preventDefault();
+                alert('Las contraseñas no coinciden. Por favor, verifica.');
+            }
+        });
+    });
+</script>

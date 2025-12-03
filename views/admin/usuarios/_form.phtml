@@ -1,0 +1,75 @@
+<!-- app/views/usuarios/crear.phtml y editar.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-user"></i> 
+        <?php echo isset($usuario) && $usuario->id ? 'Editar Usuario' : 'Nuevo Usuario'; ?>
+    </h2>
+</div>
+
+<?php echo Form::open(isset($usuario) && $usuario->id ? 'admin/usuarios/actualizar/' . $usuario->id : 'admin/usuarios/guardar'); ?>
+
+<?php if (isset($usuario) && $usuario->id): ?>
+    <?php echo Form::hidden('id', $usuario->id); ?>
+<?php endif; ?>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="codigo">Código/Usuario *</label>
+            <?php echo Form::text('codigo', 'class="form-control" required placeholder="Código único del usuario"', isset($usuario) ? $usuario->codigo : ''); ?>
+            <small class="text-muted">Para autenticación REMOTE_USER o login</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="nombre">Nombre Completo *</label>
+            <?php echo Form::text('nombre', 'class="form-control" required', isset($usuario) ? $usuario->nombre : ''); ?>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email</label>
+            <?php echo Form::email('email', 'class="form-control" placeholder="usuario@dominio.com"', isset($usuario) ? $usuario->email : ''); ?>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="rol">Rol *</label>
+            <?php 
+            $roles = (new Roles())->getActivos("columns: id, nombre");
+            echo Form::select('rol_id', $roles, 'class="form-control form-select"', isset($usuario) ? $usuario->rol_id : 'usuario', "", "id", "nombre");
+            ?>
+        </div>
+        
+        <?php if (!isset($usuario) || !$usuario->id || $usuario->auth_method != 'remote_user'): ?>
+            <div class="form-group">
+                <label for="password">
+                    <?php echo isset($usuario) && $usuario->id ? 'Nueva Contraseña' : 'Contraseña *'; ?>
+                </label>
+                <?php echo Form::password('password', 'class="form-control" ' . (!isset($usuario) || !$usuario->id ? 'required' : '') . ' placeholder="' . (isset($usuario) && $usuario->id ? 'Dejar en blanco para no cambiar' : '') . '"'); ?>
+            </div>
+            
+            <div class="form-group">
+                <label for="password_confirm">Confirmar Contraseña</label>
+                <?php echo Form::password('password_confirm', 'class="form-control" placeholder="Repetir contraseña"'); ?>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-info">
+                <i class="fa fa-info-circle"></i> Este usuario se autentica vía REMOTE_USER. La contraseña se gestiona externamente.
+            </div>
+        <?php endif; ?>
+        
+        <div class="form-group">
+            <label for="activo">Estado</label><br>
+            <?php echo Form::check('activo', 1, null, isset($usuario) ? $usuario->activo : 1); ?> Activo
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <button type="submit" class="btn btn-primary">
+        <i class="fa fa-save"></i> Guardar Usuario
+    </button>
+    <?php echo Html::link('admin/usuarios/index', 'Cancelar', 'class="btn btn-default"'); ?>
+</div>
+
+<?php echo Form::close(); ?>

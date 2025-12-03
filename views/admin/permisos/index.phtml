@@ -1,0 +1,66 @@
+<!-- app/views/admin/permisos/index.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-key"></i> Gestión de Permisos
+        <?php echo Html::link('admin/permisos/crear', '<i class="fa fa-plus"></i> Nuevo Permiso', 'class="btn btn-success pull-right"'); ?>
+    </h2>
+</div>
+
+<!-- Barra de búsqueda -->
+<div class="panel panel-default">
+    <div class="panel-body">
+        <?php echo Form::open('admin/permisos/buscar', 'method="get" class="form-inline"'); ?>
+        
+        <div class="form-group">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Buscar permisos..." 
+                       value="<?php echo isset($termino_busqueda) ? h($termino_busqueda) : ''; ?>">
+                <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </span>
+            </div>
+        </div>
+        
+        <?php if (isset($termino_busqueda) && $termino_busqueda): ?>
+            <?php echo Html::link('admin/permisos/index', 'Limpiar búsqueda', 'class="btn btn-default"'); ?>
+        <?php endif; ?>
+        
+        <?php echo Form::close(); ?>
+    </div>
+</div>
+
+<?php if ($permisos && count($permisos) > 0): ?>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Creado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($permisos as $permiso): ?>
+                <tr>
+                    <td><?php echo $permiso->id; ?></td>
+                    <td><strong><?php echo h($permiso->nombre); ?></strong></td>
+                    <td><?php echo h($permiso->descripcion); ?></td>
+                    <td><?php echo date('d/m/Y', strtotime($permiso->created_at)); ?></td>
+                    <td>
+                        <?php echo Html::link('admin/permisos/editar/' . $permiso->id, '<i class="fa fa-edit"></i>', 'class="btn btn-xs btn-primary" title="Editar"'); ?>
+                        <?php echo Html::link('admin/permisos/recursos/' . $permiso->id, '<i class="fa fa-link"></i>', 'class="btn btn-xs btn-info" title="Asignar Recursos"'); ?>
+                        <?php echo Html::link('admin/permisos/eliminar/' . $permiso->id, '<i class="fa fa-trash"></i>', 'class="btn btn-xs btn-danger btn-delete" title="Eliminar"'); ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+<?php else: ?>
+    <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i> No hay permisos definidos. 
+        <?php echo Html::link('admin/permisos/crear', 'Crear el primer permiso'); ?>
+    </div>
+<?php endif; ?>

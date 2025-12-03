@@ -1,0 +1,129 @@
+<!-- app/views/recursos/crear.phtml y editar.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-cube"></i> 
+        <?php echo isset($recurso) && $recurso->id ? 'Editar Recurso' : 'Nuevo Recurso'; ?>
+    </h2>
+</div>
+
+<?php echo Form::open(isset($recurso) && $recurso->id ? 'admin/recursos/actualizar/' . $recurso->id : 'recursos/guardar'); ?>
+
+<?php if (isset($recurso) && $recurso->id): ?>
+    <?php echo Form::hidden('id', $recurso->id); ?>
+<?php endif; ?>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="nombre">Nombre del Recurso *</label>
+            <?php echo Form::text('nombre', 'class="form-control" required placeholder="Ej: admin.usuarios.index"', isset($recurso) ? $recurso->nombre : ''); ?>
+            <small class="text-muted">Nombre único para identificar el recurso en el ACL</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="modulo">Módulo (opcional)</label>
+            <?php echo Form::text('modulo', 'class="form-control" placeholder="Ej: admin"', isset($recurso) ? $recurso->modulo : ''); ?>
+            <small class="text-muted">Dejar vacío si no hay módulo</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="controlador">Controlador *</label>
+            <?php echo Form::text('controlador', 'class="form-control" required placeholder="Ej: usuarios"', isset($recurso) ? $recurso->controlador : ''); ?>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="accion">Acción *</label>
+            <?php echo Form::text('accion', 'class="form-control" required placeholder="Ej: index, crear, editar"', isset($recurso) ? $recurso->accion : ''); ?>
+        </div>
+        
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <?php echo Form::textarea('descripcion', 'class="form-control" rows="4" placeholder="Descripción del recurso"', isset($recurso) ? $recurso->descripcion : ''); ?>
+        </div>
+        
+        <div class="form-group">
+            <label for="activo">Estado</label><br>
+            <?php echo Form::check('activo', 1, null, isset($recurso) ? $recurso->activo : 1); ?> Activo
+        </div>
+    </div>
+</div>
+
+<div class="well">
+    <h4>Información del Recurso</h4>
+    <p>
+        <strong>URL generada:</strong> 
+        <?php 
+        $urlParts = [];
+        if (isset($recurso) && $recurso->modulo) {
+            $urlParts[] = $recurso->modulo;
+        }
+        if (isset($recurso) && $recurso->controlador) {
+            $urlParts[] = $recurso->controlador;
+
+            if (isset($recurso) && $recurso->accion) {
+                $urlParts[] = $recurso->accion;
+            }
+        }
+        
+        if (count($urlParts) > 0) {
+            echo '<code>/' . PUBLIC_PATH . implode('/', $urlParts) . '</code>';
+        } else {
+            echo '<span class="text-muted">Complete los campos para ver la URL</span>';
+        }
+        ?>
+    </p>
+    <p class="text-muted small">
+        * Campos obligatorios<br>
+        El nombre debe ser único en todo el sistema.
+    </p>
+</div>
+
+<div class="form-group">
+    <button type="submit" class="btn btn-primary">
+        <i class="fa fa-save"></i> 
+        <?php echo isset($recurso) && $recurso->id ? 'Actualizar' : 'Guardar'; ?> Recurso
+    </button>
+    <?php echo Html::link('admin/recursos/index', 'Cancelar', 'class="btn btn-default"'); ?>
+</div>
+
+<?php echo Form::close(); ?>
+
+<script>
+// Mostrar URL en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    var moduloInput = document.querySelector('input[name="modulo"]');
+    var controladorInput = document.querySelector('input[name="controlador"]');
+    var accionInput = document.querySelector('input[name="accion"]');
+    var urlPreview = document.querySelector('.well code');
+    
+    function actualizarUrlPreview() {
+        var urlParts = [];
+        
+        if (moduloInput && moduloInput.value.trim()) {
+            urlParts.push(moduloInput.value.trim());
+        }
+        
+        if (controladorInput && controladorInput.value.trim()) {
+            urlParts.push(controladorInput.value.trim());
+        }
+        
+        if (accionInput && accionInput.value.trim()) {
+            urlParts.push(accionInput.value.trim());
+        }
+        
+        if (urlParts.length > 0) {
+            urlPreview.textContent = '/' + urlParts.join('/');
+        } else {
+            urlPreview.textContent = 'Complete los campos para ver la URL';
+        }
+    }
+    
+    if (moduloInput) moduloInput.addEventListener('input', actualizarUrlPreview);
+    if (controladorInput) controladorInput.addEventListener('input', actualizarUrlPreview);
+    if (accionInput) accionInput.addEventListener('input', actualizarUrlPreview);
+    
+    actualizarUrlPreview();
+});
+</script>

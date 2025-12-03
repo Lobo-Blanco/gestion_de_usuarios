@@ -1,0 +1,82 @@
+<!-- app/views/index/index.phtml -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-elegant">
+            <div class="card-header card-header-elegant">
+                <div class="logo-container">
+                    <div class="logo">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <h1 class="h3 mb-0">Bienvenido al Sistema</h1>
+                    <p class="mb-0">Sistema seguro de autenticación y control de acceso</p>
+                </div>
+            </div>
+            <div class="card-body card-body-elegant">
+                <?php View::content(); ?>
+                
+                <?php if (!$isValid): ?>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="feature-icon">
+                                    <i class="bi bi-key"></i>
+                                </div>
+                                <h4 class="card-title">Acceso Rápido</h4>
+                                <p class="card-text">Ingresa con tu código de 8 dígitos y contraseña para acceder al sistema.</p>
+                                <a href="#login-section" class="btn btn-primary-custom mt-2">Ingresar Ahora</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <?php if (Config::get('auth.allow_registration', true)): ?>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="feature-icon">
+                                    <i class="bi bi-person-plus"></i>
+                                </div>
+                                <h4 class="card-title">Nuevo Usuario</h4>
+                                <p class="card-text">Regístrate con tu código, email y crea una contraseña segura.</p>
+                                <a href="#register-section" class="btn btn-success mt-2">Registrarse</a>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <div class="text-center">
+                            <h4 class="mb-3">Características del Sistema</h4>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="p-3">
+                                        <i class="bi bi-shield-check fs-3 text-primary mb-2"></i>
+                                        <h6>Autenticación Segura</h6>
+                                        <small class="text-muted">Código único y contraseña encriptada</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3">
+                                        <i class="bi bi-envelope fs-3 text-primary mb-2"></i>
+                                        <h6>Recuperación por Email</h6>
+                                        <small class="text-muted">Restablece tu contraseña fácilmente</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3">
+                                        <i class="bi bi-graph-up fs-3 text-primary mb-2"></i>
+                                        <h6>Panel Administrativo</h6>
+                                        <small class="text-muted">Gestión completa de usuarios</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>

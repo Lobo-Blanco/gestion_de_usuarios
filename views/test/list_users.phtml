@@ -1,0 +1,9 @@
+
+<div>
+    <?php
+echo "<h2>Usuarios en la base de datos:</h2>";
+foreach ($usuarios as $usuario) {
+    echo "ID: {$usuario->id} | Email: {$usuario->email} | Rol: {$usuario->rol} | Activo: {$usuario->activo}<br>";
+}
+?>
+</div>   

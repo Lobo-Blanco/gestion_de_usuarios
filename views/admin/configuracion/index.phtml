@@ -1,0 +1,169 @@
+<!-- app/views/configuracion/index.phtml -->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-2 text-gray-800"><?= $title ?></h1>
+            <p class="mb-4">Panel de control y configuración del sistema</p>
+        </div>
+    </div>
+
+    <?php View::partial('flash') ?>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Configuraciones</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <?= $stats['total_configs'] ?>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-cog fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Último Backup</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <?= $stats['last_backup'] ?>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-database fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tamaño de Cache</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <?= $stats['cache_size'] ?>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bolt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Estado del Sistema</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <?= $stats['system_status'] ?>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-heartbeat fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Acciones Rápidas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="<?= PUBLIC_PATH ?>admin/configuracion/autenticacion" 
+                               class="btn btn-primary btn-block">
+                                <i class="fas fa-user-shield"></i> Autenticación
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="<?= PUBLIC_PATH ?>admin/configuracion/aplicacion" 
+                               class="btn btn-success btn-block">
+                                <i class="fas fa-cogs"></i> Aplicación
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="<?= PUBLIC_PATH ?>admin/configuracion/base_datos" 
+                               class="btn btn-info btn-block">
+                                <i class="fas fa-database"></i> Base de Datos
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="<?= PUBLIC_PATH ?>admin/configuracion/limpiar_cache" 
+                               class="btn btn-warning btn-block">
+                                <i class="fas fa-broom"></i> Limpiar Cache
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimos cambios (solo para admin) -->
+    <?php if (!empty($recentChanges) && $isAdmin): ?>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Últimos Cambios</h6>
+                    <a href="<?= PUBLIC_PATH ?>admin/configuracion/historial" class="btn btn-sm btn-primary">
+                        Ver Historial Completo
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Usuario</th>
+                                    <th>Configuración</th>
+                                    <th>Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recentChanges as $change): ?>
+                                <tr>
+                                    <td><?= date('d/m/Y H:i', strtotime($change['created_at'])) ?></td>
+                                    <td><?= htmlspecialchars($change['user_codigo'] ?? 'Sistema') ?></td>
+                                    <td><code><?= $change['config_name'] ?></code></td>
+                                    <td><?= htmlspecialchars($change['description']) ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>

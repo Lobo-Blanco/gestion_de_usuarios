@@ -1,0 +1,187 @@
+<div class="container-fluid">
+    <div class="page-header">
+        <h1><?= $title ?></h1>
+        <p class="lead">Información detallada del sistema y entorno</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Información de PHP</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <tr>
+                            <th width="40%">Versión de PHP</th>
+                            <td><?= $info_php['version'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>SAPI</th>
+                            <td><?= $info_php['sapi'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Límite de Memoria</th>
+                            <td><?= $info_php['memory_limit'] ?></td>
+                        </tr>
+                        <tr>
+                            <th>Tiempo Máx. Ejecución</th>
+                            <td><?= ini_get('max_execution_time') ?> segundos</td>
+                        </tr>
+                        <tr>
+                            <th>Tamaño Máx. Upload</th>
+                            <td><?= ini_get('upload_max_filesize') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Post Máx. Size</th>
+                            <td><?= ini_get('post_max_size') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Zona Horaria</th>
+                            <td><?= date_default_timezone_get() ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Información de la Aplicación</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <tr>
+                            <th width="40%">Nombre</th>
+                            <td><?= htmlspecialchars($info_app['name'] ?? 'Sistema de Gestión') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Versión</th>
+                            <td><?= htmlspecialchars($info_app['version'] ?? '1.0') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Entorno</th>
+                            <td>
+                                <?php if (PRODUCTION): ?>
+                                    <span class="label label-danger">Producción</span>
+                                <?php else: ?>
+                                    <span class="label label-warning">Desarrollo</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>URL</th>
+                            <td><?= htmlspecialchars($info_app['url'] ?? 'http://localhost') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Timezone</th>
+                            <td><?= htmlspecialchars($info_app['timezone'] ?? 'America/Lima') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Locale</th>
+                            <td><?= htmlspecialchars($info_app['locale'] ?? 'es_PE') ?></td>
+                        </tr>
+                        <tr>
+                            <th>KumbiaPHP</th>
+                            <td>
+                                <?php if (defined('KUMBIA_VERSION')): ?>
+                                    <?= KUMBIA_VERSION ?>
+                                <?php else: ?>
+                                    Desconocida
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Servidor y Entorno</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <tr>
+                            <th width="40%">Software del Servidor</th>
+                            <td><?= htmlspecialchars($info_server['software'] ?? 'Desconocido') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Nombre del Servidor</th>
+                            <td><?= htmlspecialchars($info_server['name'] ?? 'localhost') ?></td>
+                        </tr>
+                        <tr>
+                            <th>Protocolo</th>
+                            <td><?= $info_server['protocol'] ?? 'HTTP/1.1' ?></td>
+                        </tr>
+                        <tr>
+                            <th>Puerto</th>
+                            <td><?= $info_server['port'] ?? 80 ?></td>
+                        </tr>
+                        <tr>
+                            <th>Document Root</th>
+                            <td><code><?= $_SERVER['DOCUMENT_ROOT'] ?? '' ?></code></td>
+                        </tr>
+                        <tr>
+                            <th>IP del Servidor</th>
+                            <td><?= $_SERVER['SERVER_ADDR'] ?? '' ?></td>
+                        </tr>
+                        <tr>
+                            <th>IP del Cliente</th>
+                            <td><?= $_SERVER['REMOTE_ADDR'] ?? '' ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Extensiones de PHP</h3>
+                </div>
+                <div class="panel-body" style="max-height: 300px; overflow-y: auto;">
+                    <div class="row">
+                        <?php 
+                        $extensions = $info_php['extensions'] ?? get_loaded_extensions();
+                        $chunked = array_chunk($extensions, ceil(count($extensions) / 3));
+                        ?>
+                        <?php foreach ($chunked as $column): ?>
+                        <div class="col-md-4">
+                            <ul class="list-unstyled">
+                                <?php foreach ($column as $ext): ?>
+                                <li>
+                                    <span class="label label-success label-ext"><?= $ext ?></span>
+                                </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Variables de Entorno</h3>
+                </div>
+                <div class="panel-body">
+                    <pre style="max-height: 300px; overflow-y: auto; font-size: 12px;"><?php 
+                    print_r($_ENV);
+                    ?></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.label-ext {
+    display: inline-block;
+    margin: 2px;
+    font-size: 10px;
+    padding: 3px 6px;
+}
+</style>

@@ -1,0 +1,245 @@
+<!-- app/views/recursos/ver.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-cube"></i> Detalle del Recurso
+        <div class="pull-right">
+            <?php echo Html::link('admin/recursos/editar/' . $recurso->id, '<i class="fa fa-edit"></i> Editar', 'class="btn btn-primary"'); ?>
+            <?php echo Html::link('admin/recursos/index', '<i class="fa fa-arrow-left"></i> Volver', 'class="btn btn-default"'); ?>
+        </div>
+    </h2>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Información del Recurso</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th width="30%">ID:</th>
+                        <td><?php echo $recurso->id; ?></td>
+                    </tr>
+                    <tr>
+                        <th>Nombre:</th>
+                        <td><strong><?php echo h($recurso->nombre); ?></strong></td>
+                    </tr>
+                    <tr>
+                        <th>Módulo:</th>
+                        <td><?php echo h($recurso->modulo); ?></td>
+                    </tr>
+                    <tr>
+                        <th>Controlador:</th>
+                        <td><?php echo h($recurso->controlador); ?></td>
+                    </tr>
+                    <tr>
+                        <th>Acción:</th>
+                        <td><?php echo h($recurso->accion); ?></td>
+                    </tr>
+                    <tr>
+                        <th>URL:</th>
+                        <td>
+                            <code><?php echo $recurso->getUrl(); ?></code>
+                            <a href="<?php echo $recurso->getUrl(); ?>" target="_blank" class="btn btn-xs btn-default pull-right">
+                                <i class="fa fa-external-link"></i> Probar URL
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Descripción:</th>
+                        <td><?php echo nl2br(h($recurso->descripcion)); ?></td>
+                    </tr>
+                    <tr>
+                        <th>Estado:</th>
+                        <td>
+                            <?php if ($recurso->activo): ?>
+                                <span class="label label-success">
+                                    <i class="fa fa-check"></i> Activo
+                                </span>
+                            <?php else: ?>
+                                <span class="label label-danger">
+                                    <i class="fa fa-times"></i> Inactivo
+                                </span>
+                            <?php endif; ?>
+                            
+                            <div class="pull-right">
+                                <?php echo Html::link('admin/recursos/toggle_activo/' . $recurso->id, 
+                                    $recurso->activo ? 'Desactivar' : 'Activar', 
+                                    'class="btn btn-xs ' . ($recurso->activo ? 'btn-warning' : 'btn-success') . '"'
+                                ); ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Creado:</th>
+                        <td><?php echo ViewHelper::fecha($recurso->created_at); ?></td>
+                    </tr>
+                    <tr>
+                        <th>Actualizado:</th>
+                        <td><?php echo ViewHelper::fecha($recurso->updated_at); ?></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Permisos que tienen acceso -->
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-key"></i> Permisos con Acceso
+                    <span class="badge"><?php echo count($permisos); ?></span>
+                </h3>
+            </div>
+            <div class="panel-body">
+                <?php if (count($permisos) > 0): ?>
+                    <div class="row">
+                        <?php foreach ($permisos as $permiso): ?>
+                            <div class="col-md-6">
+                                <div class="well well-sm">
+                                    <strong><?php echo h($permiso->nombre); ?></strong>
+                                    <?php echo Html::link('admin/permisos/ver/' . $permiso->id, 
+                                        '<i class="fa fa-external-link"></i>', 
+                                        'class="btn btn-xs btn-default pull-right" title="Ver permiso"'
+                                    ); ?>
+                                    <br>
+                                    <small class="text-muted"><?php echo h($permiso->descripcion); ?></small>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i> Ningún permiso tiene acceso a este recurso.
+                    </div>
+                <?php endif; ?>
+                
+                <div class="text-center">
+                    <?php echo Html::link('admin/permisos/index', 
+                        '<i class="fa fa-key"></i> Gestionar Permisos', 
+                        'class="btn btn-warning"'
+                    ); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Acciones Rápidas -->
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-bolt"></i> Acciones Rápidas</h3>
+            </div>
+            <div class="panel-body">
+                <div class="list-group">
+                    <?php echo Html::link('admin/recursos/editar/' . $recurso->id, 
+                        '<i class="fa fa-edit"></i> Editar Recurso', 
+                        'class="list-group-item"'
+                    ); ?>
+                    
+                    <?php echo Html::link('admin/recursos/toggle_activo/' . $recurso->id, 
+                        '<i class="fa fa-power-off"></i> ' . ($recurso->activo ? 'Desactivar' : 'Activar'), 
+                        'class="list-group-item"'
+                    ); ?>
+                    
+                    <?php echo Html::link($recurso->getUrl(), 
+                        '<i class="fa fa-external-link"></i> Probar URL', 
+                        'class="list-group-item" target="_blank"'
+                    ); ?>
+                    
+                    <?php if (count($permisos) == 0 && count($menus) == 0): ?>
+                        <?php echo Html::link('admin/recursos/eliminar/' . $recurso->id, 
+                            '<i class="fa fa-trash"></i> Eliminar Recurso', 
+                            'class="list-group-item text-danger btn-delete"'
+                        ); ?>
+                    <?php else: ?>
+                        <a href="#" class="list-group-item text-muted" disabled>
+                            <i class="fa fa-trash"></i> Eliminar Recurso
+                            <small class="pull-right">
+                                <?php if (count($permisos) > 0): ?>
+                                    (<?php echo count($permisos); ?> permisos)
+                                <?php else: ?>
+                                    (<?php echo count($menus); ?> menús)
+                                <?php endif; ?>
+                            </small>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menús que usan este recurso -->
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-list"></i> Menús Asociados
+                    <span class="badge"><?php echo count($menus); ?></span>
+                </h3>
+            </div>
+            <div class="panel-body">
+                <?php if (count($menus) > 0): ?>
+                    <ul class="list-unstyled">
+                        <?php foreach ($menus as $menu): ?>
+                            <li style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                                <strong>
+                                    <i class="<?php echo h($menu->icono); ?>"></i>
+                                    <?php echo h($menu->nombre); ?>
+                                </strong>
+                                <div class="pull-right">
+                                    <?php echo Html::link('admin/menus/ver/' . $menu->id, 
+                                        '<i class="fa fa-eye"></i>', 
+                                        'class="btn btn-xs btn-info" title="Ver menú"'
+                                    ); ?>
+                                </div>
+                                <br>
+                                <small class="text-muted">
+                                    Orden: <?php echo $menu->posicion; ?> | 
+                                    <?php echo $menu->activo ? 'Activo' : 'Inactivo'; ?>
+                                </small>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i> Ningún menú usa este recurso.
+                    </div>
+                <?php endif; ?>
+                
+                <div class="text-center">
+                    <?php echo Html::link('admin/menus/index', 
+                        '<i class="fa fa-list"></i> Gestionar Menús', 
+                        'class="btn btn-info"'
+                    ); ?>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información Técnica -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <i class="fa fa-code"></i> Información Técnica
+                </h3>
+            </div>
+            <div class="panel-body">
+                <p>
+                    <strong>Nombre ACL:</strong><br>
+                    <code><?php echo h($recurso->nombre); ?></code>
+                </p>
+                <p>
+                    <strong>Uso en código:</strong>
+                </p>
+                <pre style="font-size: 11px;">
+// Verificar acceso
+$acl = Acl2::factory('database');
+if ($acl->check('<?php echo h($recurso->nombre); ?>', $usuario)) {
+    // Acceso permitido
+}
+
+// En before_filter
+AccessControl::beforeFilter('<?php echo h($recurso->nombre); ?>');
+                </pre>
+            </div>
+        </div>
+    </div>
+</div>
