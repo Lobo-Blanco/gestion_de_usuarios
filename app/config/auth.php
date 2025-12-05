@@ -2,10 +2,6 @@
 // config/auth.php
 
 return [
-    'app' => [
-        'name' => 'Sistema de Nacor',
-    ],
-
     // Modos de autenticación permitidos
     'authentication_modes' => ['remote_user', 'credentials', 'both'],
     'auth_algorithm' => "md5",

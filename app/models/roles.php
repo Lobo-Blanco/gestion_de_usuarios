@@ -23,6 +23,12 @@ class roles extends ActiveRecord
         'nivel' => 'numeric|min:0|max:100'
     ];
     
+    public function initialize()
+    {
+        $this->has_many('permisos', 'model: RolPermisos', 'fk: rol_id');
+        $this->belongs_to('usuario_permisos', "fk: usuarios_id");
+    }
+
     /**
      * Obtener todos los roles activos
      */
@@ -50,20 +56,20 @@ class roles extends ActiveRecord
                     GROUP_CONCAT(p.nombre SEPARATOR ', ') as permisos_nombres
                     FROM roles r
                     LEFT JOIN rol_permisos rp ON r.id = rp.rol_id
-                    LEFT JOIN permisos p ON rp.permiso_id = p.id
-                    WHERE r.id = ?
-                    GROUP BY r.id";
+                    LEFT JOIN permisos p ON rp.permisos_id = p.id
+                    WHERE r.id = $rol_id
+                    GROUP BY r.id LIMIT 1";
             
-            return $this->fetchOne($sql, [$rol_id]);
+            return $this->find_all_by_sql($sql);
         } else {
             $sql = "SELECT r.*, 
-                    COUNT(rp.permiso_id) as total_permisos
+                    COUNT(rp.permisos_id) as total_permisos
                     FROM roles r
                     LEFT JOIN rol_permisos rp ON r.id = rp.rol_id
                     GROUP BY r.id
                     ORDER BY r.nivel DESC, r.nombre ASC";
             
-            return $this->fetchAll($sql);
+            return $this->find_all_by_sql($sql);
         }
     }
     
@@ -78,16 +84,13 @@ class roles extends ActiveRecord
         // Insertar nuevos permisos
         if (!empty($permisos_ids)) {
             $values = [];
-            $params = [];
             
             foreach ($permisos_ids as $permiso_id) {
-                $values[] = '(?, ?)';
-                $params[] = $rol_id;
-                $params[] = $permiso_id;
+                $values[] = "($rol_id, $permiso_id)";
             }
             
-            $sql = "INSERT INTO rol_permisos (rol_id, permiso_id) VALUES " . implode(', ', $values);
-            return $this->execute($sql, $params);
+            $sql = "INSERT INTO rol_permisos (rol_id, permisos_id) VALUES " . implode(', ', $values);
+            return $this->find_all_by_sql($sql);
         }
         
         return true;
@@ -98,8 +101,8 @@ class roles extends ActiveRecord
      */
     public function eliminarPermisos($rol_id)
     {
-        $sql = "DELETE FROM rol_permisos WHERE rol_id = ?";
-        return $this->execute($sql, [$rol_id]);
+        $sql = "DELETE FROM rol_permisos WHERE rol_id = $rol_id";
+        return $this->find_all_by_sql($sql);
     }
     
     /**
@@ -109,11 +112,11 @@ class roles extends ActiveRecord
     {
         $sql = "SELECT p.* 
                 FROM permisos p
-                INNER JOIN rol_permisos rp ON p.id = rp.permiso_id
-                WHERE rp.rol_id = ?
+                INNER JOIN rol_permisos rp ON p.id = rp.permisos_id
+                WHERE rp.rol_id = $rol_id
                 ORDER BY p.modulo, p.categoria, p.codigo";
         
-        return $this->fetchAll($sql, [$rol_id]);
+        return $this->find_all_by_sql($sql);
     }
     
     /**
@@ -123,10 +126,10 @@ class roles extends ActiveRecord
     {
         $sql = "SELECT COUNT(*) as total
                 FROM rol_permisos rp
-                INNER JOIN permisos p ON rp.permiso_id = p.id
-                WHERE rp.rol_id = ? AND p.codigo = ?";
+                INNER JOIN permisos p ON rp.permisos_id = p.id
+                WHERE rp.rol_id = $rol_id AND p.codigo = $permiso_codigo LIMIT 1";
         
-        $result = $this->fetchOne($sql, [$rol_id, $permiso_codigo]);
+        $result = $this->find_all_by_sql($sql);
         return $result && $result['total'] > 0;
     }
     
@@ -137,10 +140,10 @@ class roles extends ActiveRecord
     {
         $sql = "SELECT u.id, u.codigo, u.nombre, u.email, u.activo
                 FROM usuarios u
-                WHERE u.rol_id = ?
+                WHERE u.rol_id = $rol_id
                 ORDER BY u.nombre ASC";
         
-        return $this->fetchAll($sql, [$rol_id]);
+        return $this->find_all_by_sql($sql);
     }
     
     /**
@@ -154,6 +157,6 @@ class roles extends ActiveRecord
                 GROUP BY r.id
                 ORDER BY r.nivel DESC";
         
-        return $this->fetchAll($sql);
+        return $this->find_all_by_sql($sql);
     }
 }

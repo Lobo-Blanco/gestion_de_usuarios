@@ -22,18 +22,24 @@ class Permisos extends ActiveRecord
         'nombre' => 'required|max:150'
     ];
     
+    public function initialize()
+    {
+        $this->has_many('rol_permisos');
+        $this->has_many('permisos_recurso');
+        $this->has_many('usuario_permisos');
+    }
+    
     /**
      * Obtener permisos agrupados por módulo y categoría
      */
-    public function getAgrupados()
+    public function getAgrupados($categoria = "")
     {
-        $sql = "SELECT * FROM {$this->_table} WHERE activo = 1 ORDER BY modulo, categoria, codigo";
-        $permisos = $this->find_by_sql($sql);
-        
+        $sql = "SELECT * FROM {$this->_table} WHERE " . ($categoria == "" ? "" : "categoria = '$categoria' and ") . "activo = 1 ORDER BY modulo, categoria, codigo";
+        $permisos = $this->find_all_by_sql($sql);Logger::Log("agrupa, $sql");
         $agrupados = [];
         foreach ($permisos as $permiso) {
-            $modulo = $permiso['modulo'] ?: 'general';
-            $categoria = $permiso['categoria'] ?: 'otros';
+            $modulo = $permiso->modulo ?: 'general';
+            $categoria = $permiso->categoria ?: 'otros';
             
             if (!isset($agrupados[$modulo])) {
                 $agrupados[$modulo] = [];
@@ -54,7 +60,7 @@ class Permisos extends ActiveRecord
      */
     public function getByModulo($modulo)
     {
-        return (new $this->_table)->find("modulo = $modulo AND activo = 1", "order: codigo");
+        return (new $this->_table)->find("modulo = '$modulo' AND activo = 1", "order: codigo");
     }
     
     /**
@@ -80,7 +86,7 @@ class Permisos extends ActiveRecord
                 )
                 ORDER BY p.modulo, p.codigo";
         
-        return $this->find_by_sql($sql);
+        return $this->find_all_by_sql($sql);
     }
     
     /**
@@ -93,7 +99,7 @@ class Permisos extends ActiveRecord
                 AND activo = 1
                 ORDER BY modulo, codigo";
         
-        return $this->find_by_sql($sql);
+        return $this->find_all_by_sql($sql);
     }
     
     /**
@@ -102,7 +108,7 @@ class Permisos extends ActiveRecord
     public function getModulos()
     {
         $sql = "SELECT DISTINCT modulo FROM {$this->_table} WHERE modulo IS NOT NULL AND modulo != '' ORDER BY modulo";
-        $resultados = $this->find_by_sql($sql);
+        $resultados = $this->find_all_by_sql($sql);
         
         $modulos = [];
         foreach ($resultados as $row) {
@@ -119,14 +125,14 @@ class Permisos extends ActiveRecord
     {
         if ($modulo) {
             $sql = "SELECT DISTINCT categoria FROM {$this->_table} 
-                    WHERE modulo = ? AND categoria IS NOT NULL AND categoria != '' 
+                    WHERE modulo = '$modulo' AND categoria IS NOT NULL AND categoria != '' 
                     ORDER BY categoria";
-            $resultados = $this->find_by_sql($sql, [$modulo]);
+            $resultados = $this->find_all_by_sql($sql);
         } else {
             $sql = "SELECT DISTINCT categoria FROM {$this->_table} 
                     WHERE categoria IS NOT NULL AND categoria != '' 
                     ORDER BY categoria";
-            $resultados = $this->find_by_sql($sql);
+            $resultados = $this->find_all_by_sql($sql);
         }
         
         $categorias = [];
@@ -148,6 +154,6 @@ class Permisos extends ActiveRecord
                 GROUP BY modulo 
                 ORDER BY modulo";
         
-        return $this->find_by_sql($sql);
+        return $this->find_all_by_sql($sql);
     }
 }

@@ -30,7 +30,7 @@ class PermisosController extends AdminController
     public function index()
     {
         // Solo administradores pueden gestionar permisos
-        if (!$this->is_admin) {
+        if (!AuthMiddleware::isAdmin()) {
             $this->handle_unauthorized_access('permisos.access');
         }
 
@@ -39,8 +39,10 @@ class PermisosController extends AdminController
         
         if ($modulo) {
             $this->permisos = $this->permisos_model->getByModulo($modulo);
+            $this->vista_agrupada = false;  // Flag para la vista
         } else {
-            $this->permisos_agrupados = $this->permisos_model->getAgrupados();
+            $this->permisos = $this->permisos_model->getAgrupados($categoria);
+            $this->vista_agrupada = true;   // Flag para la vista
         }
         
         $this->modulos = $this->permisos_model->getModulos();
@@ -83,7 +85,7 @@ class PermisosController extends AdminController
             $this->redirect('permisos');
         }
         
-        $this->title = 'Editar Permiso: ' . $permiso['nombre'];
+        $this->title = 'Editar Permiso: ' . $permiso->nombre;
         
         if (Input::hasPost('guardar')) {
             $this->procesar_edicion($id);
@@ -108,11 +110,11 @@ class PermisosController extends AdminController
         
         // Verificar si el permiso está asignado a algún rol
         $db = Db::factory();
-        $sql = "SELECT COUNT(*) as total FROM rol_permisos WHERE permiso_id = ?";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+        $sql = "SELECT COUNT(*) as total FROM rol_permisos WHERE permiso_id = $id";
+        $stmt = $db->query($sql);
+        $result = $db->fetch_array($stmt);
+        unset($db);
+
         if ($result['total'] > 0) {
             Flash::error('No se puede eliminar el permiso porque está asignado a uno o más roles');
             $this->redirect('permisos');
@@ -287,5 +289,153 @@ class PermisosController extends AdminController
         
         sort($categorias);
         return $categorias;
+    }
+
+    /**
+     * Ver detalle de un permiso
+     */
+    public function ver($id)
+    {
+        // Solo administradores pueden ver detalles
+         if (!AuthMiddleware::isAdmin()) {
+            $this->handle_unauthorized_access('permisos.view');
+        }
+        
+        $permiso = $this->permisos_model->find($id);
+        
+        if (!$permiso) {
+            Flash::error('Permiso no encontrado');
+            Redirect::to('permisos');
+        }
+        
+        $this->title = 'Detalle del Permiso: ' . $permiso->nombre;
+        
+        // Cargar información del permiso
+        $this->permiso = $permiso;
+        
+        // Cargar roles que tienen este permiso
+        $this->roles_con_permiso = $this->get_roles_con_permiso($id);
+        
+        // Cargar recursos asociados (si hay)
+        $this->recursos_asociados = $this->get_recursos_asociados($id);
+        
+        // Cargar estadísticas de uso
+        $this->estadisticas = $this->get_estadisticas_permiso($id);
+        
+        // Cargar actividad reciente relacionada
+        $this->actividad_reciente = $this->get_actividad_reciente($id);
+    }
+
+    /**
+     * Obtener roles que tienen este permiso
+     */
+    private function get_roles_con_permiso($permiso_id)
+    {
+        try {
+            $db = Db::factory();
+            $sql = "SELECT r.*, COUNT(u.id) as total_usuarios
+                    FROM roles r
+                    INNER JOIN rol_permisos rp ON r.id = rp.rol_id
+                    LEFT JOIN usuarios u ON u.rol_id = r.id
+                    WHERE rp.permiso_id = $permiso_id
+                    GROUP BY r.id
+                    ORDER BY r.nivel DESC, r.nombre";
+            
+            $stmt = $db->in_query_assoc($sql);
+            return $db->fetch_array($stmt);
+        } catch (Exception $e) {
+            Logger::error('Error obteniendo roles con permiso: ' . $e->getMessage());
+            return [];
+        } finally {
+            // Esto se ejecutará siempre, incluso si hay excepciones
+            if (isset($db)) {
+                unset($db);
+            }
+        }
+    }
+
+    /**
+     * Obtener recursos asociados a este permiso
+     */
+    private function get_recursos_asociados($permiso_id)
+    {
+        try {
+            // Si tienes tabla permisos_recursos
+            $db = Db::factory();
+            $sql = "SELECT re.* 
+                    FROM recursos re
+                    INNER JOIN permisos_recursos pr ON re.id = pr.recurso_id
+                    WHERE pr.permiso_id = $permiso_id
+                    ORDER BY re.modulo, re.controlador, re.accion";
+            
+            $stmt = $db->in_query_assoc($sql);
+            return $db->fetch_array(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            // Si no existe la tabla, retornar array vacío
+            return [];
+        } finally {
+            // Esto se ejecutará siempre, incluso si hay excepciones
+            if (isset($db)) {
+                unset($db);
+            }
+        }
+    }
+
+    /**
+     * Obtener estadísticas del permiso
+     */
+    private function get_estadisticas_permiso($permiso_id)
+    {
+        try {
+            $db = Db::factory();
+            
+            // Total de roles con este permiso
+            $sql_roles = "SELECT COUNT(DISTINCT rol_id) as total_roles 
+                        FROM rol_permisos 
+                        WHERE permiso_id = $permiso_id";
+            $stmt = $db->in_query_assoc($sql_roles);
+            $total_roles = $db->fetch_array($stmt);
+            
+            // Total de usuarios con roles que tienen este permiso
+            $sql_usuarios = "SELECT COUNT(DISTINCT u.id) as total_usuarios
+                            FROM usuarios u
+                            INNER JOIN roles r ON u.rol_id = r.id
+                            INNER JOIN rol_permisos rp ON r.id = rp.rol_id
+                            WHERE rp.permiso_id = $permiso_id AND u.activo = 1";
+            $stmt = $db->in_query_assoc($sql_usuarios);
+            $total_usuarios = $stmt->fetch_array($stmt);
+            
+            return [
+                'total_roles' => $total_roles,
+                'total_usuarios' => $total_usuarios,
+                'creado' => $this->permiso['created_at'] ?? null,
+                'actualizado' => $this->permiso['updated_at'] ?? null
+            ];
+        } catch (Exception $e) {
+            Logger::error('Error obteniendo estadísticas: ' . $e->getMessage());
+            return ['total_roles' => 0, 'total_usuarios' => 0];
+        } finally {
+            // Esto se ejecutará siempre, incluso si hay excepciones
+            if (isset($db)) {
+                unset($db);
+            }
+        }
+    }
+
+    /**
+     * Obtener actividad reciente relacionada con el permiso
+     */
+    private function get_actividad_reciente($permiso_id)
+    {
+        try {
+            return (new LogAcceso)->find(
+                "conditions: accion LIKE '%permiso%' AND detalles LIKE '%\"permiso_id\":\"$permiso_id\"%'",
+                "order: fecha DESC",
+                "limit: 10"
+            );
+        } catch (Exception $e) {
+            return [];
+        }
+
     }
 }

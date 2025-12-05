@@ -30,16 +30,16 @@
                 <div class="form-group">
                     <label for="acl_cache_lifetime">Tiempo de Cache (segundos)</label>
                     <?php echo Form::number('acl_cache_lifetime', 
+                        'class="form-control" min="60"',
                         isset($config_acl['cache_lifetime']) ? $config_acl['cache_lifetime'] : 3600,
-                        'class="form-control" min="60"'
                     ); ?>
                 </div>
                 
                 <div class="form-group">
                     <label for="acl_default_role">Rol por Defecto</label>
                     <?php echo Form::text('acl_default_role', 
-                        isset($config_acl['default_role']) ? $config_acl['default_role'] : 'usuario',
-                        'class="form-control"'
+                        'class="form-control"',
+                        isset($config_acl['default_role']) ? $config_acl['default_role'] : 'usuario'
                     ); ?>
                     <small class="text-muted">Rol asignado a nuevos usuarios automáticamente</small>
                 </div>
@@ -68,8 +68,8 @@
                         implode("\n", $config_acl['public_resources']) : 
                         "index/index\nauth/login\nauth/register";
                     ?>
-                    <?php echo Form::textarea('public_resources', $publicResources, 
-                        'class="form-control" rows="6" placeholder="Un recurso por línea"'
+                    <?php echo Form::textarea('public_resources', 
+                        'class="form-control" rows="6" placeholder="Un recurso por línea"', $publicResources
                     ); ?>
                     <small class="text-muted">
                         Recursos que no requieren autenticación. Uno por línea.<br>
@@ -95,8 +95,8 @@
                         implode("\n", $config_acl['admin_resources']) : 
                         "admin.*\nusuarios.*\npermisos.*\nrecursos.*\nmenus.*\nconfiguracion.*";
                     ?>
-                    <?php echo Form::textarea('admin_resources', $adminResources, 
-                        'class="form-control" rows="6" placeholder="Un recurso por línea"'
+                    <?php echo Form::textarea('admin_resources', 
+                        'class="form-control" rows="6" placeholder="Un recurso por línea"', $adminResources
                     ); ?>
                     <small class="text-muted">
                         Recursos que requieren rol administrativo. Usar * para wildcards.<br>
@@ -120,8 +120,8 @@
                         implode("\n", $config_acl['scan_paths']) : 
                         APP_PATH . "controllers/\n" . APP_PATH . "modules/";
                     ?>
-                    <?php echo Form::textarea('scan_paths', $scanPaths, 
-                        'class="form-control" rows="6" placeholder="Una ruta por línea"'
+                    <?php echo Form::textarea('scan_paths', 
+                        'class="form-control" rows="6" placeholder="Una ruta por línea"', $scanPaths
                     ); ?>
                     <small class="text-muted">
                         Directorios donde buscar controladores para escanear recursos.<br>
@@ -173,10 +173,10 @@
         <?php 
         try {
             $acl = Acl2::factory('database');
-            $totalPermisos = (new Permiso())->count();
-            $totalRecursos = (new Recurso())->count();
-            $totalUsuarios = (new Usuario())->count();
-            $totalAsignaciones = (new UsuarioPermiso())->count();
+            $totalPermisos = (new Permisos())->count();
+            $totalRecursos = (new Recursos())->count();
+            $totalUsuarios = (new Usuarios())->count();
+            $totalAsignaciones = (new UsuarioPermisos())->count();
         } catch (Exception $e) {
             $error = $e->getMessage();
         }

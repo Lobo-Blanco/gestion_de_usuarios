@@ -1,0 +1,349 @@
+<!-- app/views/configuracion/ver_historial.phtml -->
+<div class="container-fluid">
+    <div class="page-header">
+        <h1>
+            <?= $title ?>
+            <small>Detalles del registro</small>
+        </h1>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Panel de información -->
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Información del Archivo</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="dl-horizontal">
+                                <dt>Archivo:</dt>
+                                <dd><code><?= $historial_info['filename'] ?></code></dd>
+                                
+                                <dt>Configuración:</dt>
+                                <dd>
+                                    <span class="label label-primary">
+                                        <?= $historial_info['config_name'] ?>
+                                    </span>
+                                    <?php if ($is_database_config): ?>
+                                        <span class="label label-info">
+                                            <i class="glyphicon glyphicon-hdd"></i> Base de Datos
+                                        </span>
+                                    <?php endif; ?>
+                                </dd>
+                                
+                                <dt>Fecha:</dt>
+                                <dd><?= $historial_info['date'] ?></dd>
+                                
+                                <dt>Tamaño:</dt>
+                                <dd><?= $this->formatBytes($historial_info['size']) ?></dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <?php if (!empty($metadata)): ?>
+                                <div class="well well-sm">
+                                    <h5>Metadatos:</h5>
+                                    <ul class="list-unstyled">
+                                        <?php foreach ($metadata as $key => $value): ?>
+                                            <li>
+                                                <strong><?= ucfirst($key) ?>:</strong>
+                                                <span class="text-muted"><?= htmlspecialchars($value) ?></span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <div class="btn-group">
+                                <a href="<?= PUBLIC_PATH ?>configuracion/descargar_historial/<?= $historial_info['filename'] ?>" 
+                                   class="btn btn-default btn-sm">
+                                    <i class="glyphicon glyphicon-download"></i> Descargar
+                                </a>
+                                <a href="<?= PUBLIC_PATH ?>configuracion/historial" 
+                                   class="btn btn-default btn-sm">
+                                    <i class="glyphicon glyphicon-arrow-left"></i> Volver al Historial
+                                </a>
+                                <?php if ($is_database_config && isset($parsed_config)): ?>
+                                    <button type="button" class="btn btn-warning btn-sm" 
+                                            data-toggle="modal" data-target="#restoreModal">
+                                        <i class="glyphicon glyphicon-repeat"></i> Restaurar
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel de contenido -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active">
+                            <a href="#raw" aria-controls="raw" role="tab" data-toggle="tab">
+                                <i class="glyphicon glyphicon-file"></i> Código PHP
+                            </a>
+                        </li>
+                        <?php if ($is_database_config && isset($parsed_config)): ?>
+                            <li role="presentation">
+                                <a href="#parsed" aria-controls="parsed" role="tab" data-toggle="tab">
+                                    <i class="glyphicon glyphicon-list-alt"></i> Vista Estructurada
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <li role="presentation">
+                            <a href="#preview" aria-controls="preview" role="tab" data-toggle="tab">
+                                <i class="glyphicon glyphicon-eye-open"></i> Vista Previa
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <div class="tab-content">
+                        <!-- Pestaña: Código PHP -->
+                        <div role="tabpanel" class="tab-pane active" id="raw">
+                            <div class="alert alert-info">
+                                <i class="glyphicon glyphicon-info-sign"></i>
+                                Contenido completo del archivo de historial
+                            </div>
+                            <pre class="php-code" style="max-height: 500px; overflow: auto;"><?= 
+                                htmlspecialchars($raw_content) 
+                            ?></pre>
+                        </div>
+                        
+                        <!-- Pestaña: Vista Estructurada (solo para BD) -->
+                        <?php if ($is_database_config && isset($parsed_config)): ?>
+                            <div role="tabpanel" class="tab-pane" id="parsed">
+                                <div class="alert alert-success">
+                                    <i class="glyphicon glyphicon-hdd"></i>
+                                    Configuración de Base de Datos: <strong><?= $db_config_name ?></strong>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th width="30%">Parámetro</th>
+                                                <th>Valor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($parsed_config as $key => $value): ?>
+                                                <tr>
+                                                    <td>
+                                                        <strong><?= htmlspecialchars($key) ?></strong>
+                                                        <?php if (in_array($key, ['driver', 'host', 'database', 'username'])): ?>
+                                                            <span class="label label-important">Requerido</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php if ($key === 'password'): ?>
+                                                            <span class="text-muted">
+                                                                <?= str_repeat('•', strlen($value)) ?>
+                                                            </span>
+                                                            <small class="text-muted">(contraseña oculta)</small>
+                                                        <?php elseif (is_array($value)): ?>
+                                                            <pre class="small"><?= print_r($value, true) ?></pre>
+                                                        <?php elseif (is_bool($value)): ?>
+                                                            <span class="label label-<?= $value ? 'success' : 'warning' ?>">
+                                                                <?= $value ? 'true' : 'false' ?>
+                                                            </span>
+                                                        <?php elseif (empty($value) && $value !== '0'): ?>
+                                                            <span class="label label-default">vacío</span>
+                                                        <?php else: ?>
+                                                            <code><?= htmlspecialchars($value) ?></code>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <?php if (isset($parsed_config['driver'])): ?>
+                                    <div class="well">
+                                        <h5>Cadena de Conexión:</h5>
+                                        <code>
+                                            <?= $parsed_config['driver'] ?>://
+                                            <?= $parsed_config['username'] ?>
+                                            <?php if (!empty($parsed_config['password'])): ?>
+                                                :********
+                                            <?php endif; ?>
+                                            @<?= $parsed_config['host'] ?>
+                                            <?php if (!empty($parsed_config['port']) && $parsed_config['port'] != 3306): ?>
+                                                :<?= $parsed_config['port'] ?>
+                                            <?php endif; ?>
+                                            /<?= $parsed_config['database'] ?>
+                                            <?php if (!empty($parsed_config['charset'])): ?>
+                                                ?charset=<?= $parsed_config['charset'] ?>
+                                            <?php endif; ?>
+                                        </code>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <!-- Pestaña: Vista Previa -->
+                        <div role="tabpanel" class="tab-pane" id="preview">
+                            <div class="alert alert-warning">
+                                <i class="glyphicon glyphicon-warning-sign"></i>
+                                Esta es la parte ejecutable del archivo (array PHP)
+                            </div>
+                            <div class="php-highlight">
+                                <?php
+                                // Resaltar sintaxis PHP
+                                $highlighted = highlight_string('<?php ' . $content, true);
+                                // Remover el <?php agregado
+                                $highlighted = str_replace('&lt;?php&nbsp;', '', $highlighted);
+                                echo $highlighted;
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para restaurar -->
+<div class="modal fade" id="restoreModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="<?= PUBLIC_PATH ?>configuracion/restaurar_historial">
+                <input type="hidden" name="filename" value="<?= $historial_info['filename'] ?>">
+                <input type="hidden" name="config_name" value="<?= $historial_info['config_name'] ?>">
+                
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Confirmar Restauración</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="glyphicon glyphicon-warning-sign"></i>
+                        <strong>¡Atención!</strong> Esta acción restaurará la configuración desde el historial.
+                    </div>
+                    
+                    <div class="well">
+                        <h5>Detalles de la restauración:</h5>
+                        <ul>
+                            <li><strong>Archivo:</strong> <?= $historial_info['filename'] ?></li>
+                            <li><strong>Configuración:</strong> <?= $historial_info['config_name'] ?></li>
+                            <li><strong>Fecha:</strong> <?= $historial_info['date'] ?></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_text">Escriba "RESTAURAR" para confirmar:</label>
+                        <input type="text" class="form-control" id="confirm_text" name="confirm_text" 
+                               placeholder="Escriba RESTAURAR aquí" required>
+                        <small class="text-muted">Esta acción sobrescribirá la configuración actual.</small>
+                    </div>
+                    
+                    <?php if ($is_database_config): ?>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="set_as_active" value="1" checked>
+                                Establecer como configuración de base de datos activa
+                            </label>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="restaurar" value="1" class="btn btn-warning" id="btnRestaurar" disabled>
+                        <i class="glyphicon glyphicon-repeat"></i> Restaurar Configuración
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validar texto de confirmación
+document.getElementById('confirm_text').addEventListener('input', function() {
+    const btn = document.getElementById('btnRestaurar');
+    btn.disabled = this.value.toUpperCase() !== 'RESTAURAR';
+});
+
+// Inicializar tabs
+$(function() {
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        // Ajustar altura del contenido
+        const activeTab = $(e.target).attr("href");
+        $(activeTab + ' pre, ' + activeTab + ' .php-highlight').css('max-height', '500px');
+    });
+});
+
+// Copiar al portapapeles
+function copyToClipboard(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    
+    alert('Contenido copiado al portapapeles');
+}
+</script>
+
+<style>
+.php-code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.php-highlight {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.php-highlight span {
+    font-family: inherit;
+}
+
+.dl-horizontal dt {
+    width: 150px;
+    text-align: left;
+}
+
+.dl-horizontal dd {
+    margin-left: 170px;
+}
+
+.nav-tabs {
+    margin-bottom: 15px;
+}
+
+.label-important {
+    background-color: #d9534f;
+    font-size: 10px;
+    margin-left: 5px;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.well {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+</style>

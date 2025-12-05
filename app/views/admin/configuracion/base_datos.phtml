@@ -1,40 +1,129 @@
+<!-- app/views/configuracion/base_datos.phtml -->
 <div class="container-fluid">
     <div class="page-header">
-        <h1><?= $title ?></h1>
+        <h1><?= $title ?> <small>Gestión de configuraciones</small></h1>
     </div>
     
-    <?php View::partial('flash') ?>
+    <?php //View::partial('flash') ?>
     
     <div class="row">
-        <div class="col-md-12">
+        <!-- Lista de configuraciones -->
+        <div class="col-md-4">
             <div class="panel panel-default">
+                <div class="panel-heading clearfix">
+                    <h3 class="panel-title pull-left">Configuraciones Disponibles</h3>
+                    <button class="btn btn-xs btn-success pull-right mb-4" onclick="nuevaConfiguracion()">
+                        <i class="glyphicon glyphicon-plus"></i> Nueva
+                    </button>
+                </div>
+                <div class="panel-body" style="padding: 0;">
+                    <div class="list-group" style="margin-bottom: 0;">
+                        <?php foreach ($databases as $name => $config): ?>
+                            <a href="#" class="list-group-item db-config-item <?= $name == $active_db['name'] ? 'active' : '' ?>" 
+                               onclick="cargarConfiguracion('<?= $name ?>')"
+                               data-db-name="<?= $name ?>">
+                                <h4 class="list-group-item-heading">
+                                    <?= $name ?>
+                                    <?php if ($name == $active_db['name']): ?>
+                                        <span class="label label-success pull-right">Activa</span>
+                                    <?php endif; ?>
+                                </h4>
+                                <p class="list-group-item-text small">
+                                    <strong><?= $config['type'] ?></strong> | 
+                                    <?= $config['host'] ?>:<?= $config['port'] ?? 3306 ?>
+                                    <br>
+                                    BD: <code><?= $config['name'] ?></code>
+                                </p>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <form method="post" class="form-inline">
+                        <div class="form-group" style="width: 70%;">
+                            <select name="active_db_name" class="form-control input-sm" style="width: 100%;">
+                                <?php foreach ($databases as $name => $config): ?>
+                                    <option value="<?= $name ?>" <?= $name == $active_db['name'] ? 'selected' : '' ?>>
+                                        <?= $name ?> (<?= $config['name'] ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <button type="submit" name="set_active_db" class="btn btn-warning btn-sm">
+                            <i class="glyphicon glyphicon-ok"></i> Activar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Editor de configuración -->
+        <div class="col-md-8">
+            <div class="panel panel-primary">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Configuración de Base de Datos - Desarrollo</h3>
+                    <h3 class="panel-title">
+                        Editor de Configuración
+                        <span id="current-db-name" class="label label-default pull-right">
+                            <?= $active_db['name'] ?>
+                        </span>
+                    </h3>
                 </div>
                 <div class="panel-body">
-                    <form method="post" action="">
+                    <form method="post" action="" id="db-config-form">
+                        <input type="hidden" name="db_name" id="db_name" value="<?= $active_db['name'] ?>">
+                        <input type="hidden" name="is_new" id="is_new" value="0">
+                        
                         <div class="form-group">
-                            <label for="db_driver">Driver</label>
-                            <select class="form-control" id="db_driver" name="db_driver">
-                                <option value="mysql" <?= ($config_db['development']['driver'] ?? 'mysql') == 'mysql' ? 'selected' : '' ?>>MySQL</option>
-                                <option value="pgsql" <?= ($config_db['development']['driver'] ?? '') == 'pgsql' ? 'selected' : '' ?>>PostgreSQL</option>
-                                <option value="sqlite" <?= ($config_db['development']['driver'] ?? '') == 'sqlite' ? 'selected' : '' ?>>SQLite</option>
-                            </select>
+                            <label for="db_name_input">Nombre de Configuración *</label>
+                            <input type="text" class="form-control" id="db_name_input" 
+                                   name="db_name_input" value="<?= $active_db['name'] ?>" required>
+                            <small class="text-muted">Identificador único (ej: default, produccion, testing)</small>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="db_host">Host</label>
-                                    <input type="text" class="form-control" id="db_host" name="db_host" 
-                                           value="<?= htmlspecialchars($config_db['development']['host'] ?? 'localhost') ?>" required>
+                                    <label for="db_type">Driver *</label>
+                                    <select class="form-control" id="db_type" name="db_type" required>
+                                        <option value="mysql" <?= ($active_db['config']['type'] ?? 'mysql') == 'mysql' ? 'selected' : '' ?>>MySQL</option>
+                                        <option value="pgsql" <?= ($active_db['config']['type'] ?? '') == 'pgsql' ? 'selected' : '' ?>>PostgreSQL</option>
+                                        <option value="sqlite" <?= ($active_db['config']['type'] ?? '') == 'sqlite' ? 'selected' : '' ?>>SQLite</option>
+                                        <option value="sqlsrv" <?= ($active_db['config']['type'] ?? '') == 'sqlsrv' ? 'selected' : '' ?>>SQL Server</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="db_charset">Charset</label>
+                                    <select class="form-control" id="db_charset" name="db_charset">
+                                        <option value="utf8" <?= ($active_db['config']['charset'] ?? 'utf8') == 'utf8' ? 'selected' : '' ?>>UTF-8</option>
+                                        <option value="utf8mb4" <?= ($active_db['config']['charset'] ?? '') == 'utf8mb4' ? 'selected' : '' ?>>UTF-8MB4</option>
+                                        <option value="latin1" <?= ($active_db['config']['charset'] ?? '') == 'latin1' ? 'selected' : '' ?>>Latin1</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="db_host">Host *</label>
+                                    <input type="text" class="form-control" id="db_host" name="db_host" 
+                                           value="<?= htmlspecialchars($active_db['config']['host'] ?? 'localhost') ?>" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="db_port">Puerto</label>
                                     <input type="number" class="form-control" id="db_port" name="db_port" 
-                                           value="<?= $config_db['development']['port'] ?? 3306 ?>">
+                                           value="<?= $active_db['config']['port'] ?? 3306 ?>">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="db_database">Base de Datos *</label>
+                                    <input type="text" class="form-control" id="db_database" name="db_database" 
+                                           value="<?= htmlspecialchars($active_db['config']['database'] ?? '') ?>" required>
                                 </div>
                             </div>
                         </div>
@@ -42,50 +131,245 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="db_username">Usuario</label>
+                                    <label for="db_username">Usuario *</label>
                                     <input type="text" class="form-control" id="db_username" name="db_username" 
-                                           value="<?= htmlspecialchars($config_db['development']['username'] ?? 'root') ?>" required>
+                                           value="<?= htmlspecialchars($active_db['config']['username'] ?? 'root') ?>" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="db_password">Contraseña</label>
-                                    <input type="password" class="form-control" id="db_password" name="db_password" 
-                                           value="<?= htmlspecialchars($config_db['development']['password'] ?? '') ?>">
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="db_password" name="db_password" 
+                                               value="<?= htmlspecialchars($active_db['config']['password'] ?? '') ?>">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" onclick="togglePassword()">
+                                                <i class="glyphicon glyphicon-eye-open"></i>
+                                            </button>
+                                        </span>
+                                    </div>
                                     <small class="text-muted">Dejar vacío si no hay contraseña</small>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="db_database">Nombre de Base de Datos</label>
-                            <input type="text" class="form-control" id="db_database" name="db_database" 
-                                   value="<?= htmlspecialchars($config_db['development']['database'] ?? 'sistema') ?>" required>
+                        <!-- Opciones específicas para MySQL -->
+                        <div id="mysql-options" style="display: <?= ($active_db['config']['type'] ?? 'mysql') == 'mysql' ? 'block' : 'none' ?>;">
+                            <div class="form-group">
+                                <label for="db_collation">Collation</label>
+                                <select class="form-control" id="db_collation" name="db_collation">
+                                    <option value="utf8_unicode_ci" <?= ($active_db['config']['collation'] ?? 'utf8_unicode_ci') == 'utf8_unicode_ci' ? 'selected' : '' ?>>utf8_unicode_ci</option>
+                                    <option value="utf8_general_ci" <?= ($active_db['config']['collation'] ?? '') == 'utf8_general_ci' ? 'selected' : '' ?>>utf8_general_ci</option>
+                                    <option value="utf8mb4_unicode_ci" <?= ($active_db['config']['collation'] ?? '') == 'utf8mb4_unicode_ci' ? 'selected' : '' ?>>utf8mb4_unicode_ci</option>
+                                </select>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="db_charset">Charset</label>
-                            <select class="form-control" id="db_charset" name="db_charset">
-                                <option value="utf8" <?= ($config_db['development']['charset'] ?? 'utf8') == 'utf8' ? 'selected' : '' ?>>UTF-8</option>
-                                <option value="utf8mb4" <?= ($config_db['development']['charset'] ?? '') == 'utf8mb4' ? 'selected' : '' ?>>UTF-8MB4</option>
-                                <option value="latin1" <?= ($config_db['development']['charset'] ?? '') == 'latin1' ? 'selected' : '' ?>>Latin1</option>
-                            </select>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="set_as_active" value="1" id="set_as_active">
+                                Establecer como configuración activa
+                            </label>
                         </div>
                         
                         <div class="alert alert-info">
-                            <strong>Nota:</strong> Los cambios en la configuración de base de datos pueden afectar el funcionamiento del sistema.
-                            Asegúrese de tener permisos y credenciales correctas.
+                            <strong>Información:</strong> 
+                            <ul class="mb-0" style="padding-left: 20px;">
+                                <li>Los cambios se guardan en <code>app/config/databases.php</code></li>
+                                <li>La configuración activa se define en <code>config.database</code></li>
+                                <li>Los campos marcados con * son obligatorios</li>
+                            </ul>
                         </div>
                         
-                        <button type="submit" name="guardar_db" class="btn btn-primary">
-                            <i class="glyphicon glyphicon-save"></i> Guardar Configuración
-                        </button>
-                        <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-default">
-                            <i class="glyphicon glyphicon-arrow-left"></i> Volver
-                        </a>
+                        <div class="btn-group">
+                            <button type="submit" name="guardar_db" class="btn btn-primary">
+                                <i class="glyphicon glyphicon-save"></i> Guardar
+                            </button>
+                            <button type="button" class="btn btn-danger" id="btn-eliminar" onclick="confirmarEliminacion()">
+                                <i class="glyphicon glyphicon-trash"></i> Eliminar
+                            </button>
+                            <button type="button" class="btn btn-default" onclick="probarConexion()">
+                                <i class="glyphicon glyphicon-flash"></i> Probar Conexión
+                            </button>
+                            <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-default">
+                                <i class="glyphicon glyphicon-arrow-left"></i> Volver
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Cargar configuración
+function cargarConfiguracion(dbName) {
+    fetch(`<?= PUBLIC_PATH ?>configuracion/get_config/${dbName}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Actualizar UI
+                document.getElementById('current-db-name').textContent = dbName;
+                document.getElementById('db_name').value = dbName;
+                document.getElementById('db_name_input').value = dbName;
+                document.getElementById('is_new').value = '0';
+                
+                // Llenar formulario
+                const config = data.config;
+                document.getElementById('db_type').value = config.type || 'mysql';
+                document.getElementById('db_host').value = config.host || 'localhost';
+                document.getElementById('db_port').value = config.port || 3306;
+                document.getElementById('db_username').value = config.username || 'root';
+                document.getElementById('db_database').value = config.database || '';
+                document.getElementById('db_charset').value = config.charset || 'utf8';
+                document.getElementById('db_password').value = config.password || '';
+                
+                // Mostrar/ocultar opciones específicas
+                toggleTypeOptions(config.type);
+                
+                // Actualizar estado activo
+                document.querySelectorAll('.db-config-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.dbName === dbName) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // Habilitar botón eliminar (excepto para 'default')
+                document.getElementById('btn-eliminar').disabled = dbName === 'default';
+            }
+        });
+}
+
+// Nueva configuración
+function nuevaConfiguracion() {
+    // Resetear formulario
+    document.getElementById('db_name').value = '';
+    document.getElementById('db_name_input').value = '';
+    document.getElementById('db_host').value = 'localhost';
+    document.getElementById('db_port').value = 3306;
+    document.getElementById('db_username').value = 'root';
+    document.getElementById('db_database').value = '';
+    document.getElementById('db_password').value = '';
+    document.getElementById('db_charset').value = 'utf8';
+    document.getElementById('db_type').value = 'mysql';
+    document.getElementById('is_new').value = '1';
+    document.getElementById('set_as_active').checked = true;
+    
+    // Actualizar UI
+    document.getElementById('current-db-name').textContent = 'Nueva Configuración';
+    document.getElementById('btn-eliminar').disabled = true;
+    
+    // Mostrar opciones MySQL por defecto
+    toggleTypeOptions('mysql');
+    
+    // Remover clase active de todos los items
+    document.querySelectorAll('.db-config-item').forEach(item => {
+        item.classList.remove('active');
+    });
+}
+
+// Mostrar/ocultar opciones según driver
+function toggleTypeOptions(type) {
+    const mysqlOptions = document.getElementById('mysql-options');
+    mysqlOptions.style.display = type === 'mysql' ? 'block' : 'none';
+}
+
+// Alternar visibilidad de contraseña
+function togglePassword() {
+    const input = document.getElementById('db_password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// Confirmar eliminación
+function confirmarEliminacion() {
+    const dbName = document.getElementById('db_name').value;
+    if (!dbName || dbName === 'default') {
+        alert('No se puede eliminar la configuración "default"');
+        return;
+    }
+    
+    if (confirm(`¿Está seguro de eliminar la configuración "${dbName}"?`)) {
+        const form = document.getElementById('db-config-form');
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'eliminar_db';
+        input.value = '1';
+        form.appendChild(input);
+        form.submit();
+    }
+}
+
+// Probar conexión
+function probarConexion() {
+    const dbName = document.getElementById('db_name_input').value || 'test';
+    const type = document.getElementById('db_type').value;
+    const host = document.getElementById('db_host').value;
+    const port = document.getElementById('db_port').value;
+    const database = document.getElementById('db_database').value;
+    const username = document.getElementById('db_username').value;
+    const password = document.getElementById('db_password').value;
+    
+    if (!host || !database || !username) {
+        alert('Complete los campos obligatorios primero');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const btn = event.target;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="glyphicon glyphicon-refresh spinning"></i> Probando...';
+    btn.disabled = true;
+    
+    // Enviar prueba
+    fetch(`<?= PUBLIC_PATH ?>configuracion/probar_conexion`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            type, host, port, database, username, password
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✓ Conexión exitosa: ' + data.message);
+        } else {
+            alert('✗ Error de conexión: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error al probar conexión: ' + error.message);
+    })
+    .finally(() => {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    });
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    // Evento para cambiar opciones según type
+    document.getElementById('db_type').addEventListener('change', function() {
+        toggleTypeOptions(this.value);
+    });
+    
+    // Cargar configuración activa al inicio
+    cargarConfiguracion('<?= $active_db['name'] ?>');
+});
+
+// Estilo para ícono giratorio
+const style = document.createElement('style');
+style.textContent = `
+    .spinning {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>

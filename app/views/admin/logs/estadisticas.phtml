@@ -1,0 +1,219 @@
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-chart-bar text-primary"></i> Estadísticas de Acceso
+        </h1>
+        <div>
+            <a href="<?= PUBLIC_PATH ?>admin/logs" class="btn btn-outline-secondary">
+                <i class="fas fa-list"></i> Ver logs
+            </a>
+            <a href="<?= PUBLIC_PATH ?>admin/logs/buscar" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i> Buscar
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filtro de fechas -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Rango de Fechas</h5>
+        </div>
+        <div class="card-body">
+            <?= Form::open('logs/estadisticas', 'get', 'class="row g-3"') ?>
+            <div class="col-md-4">
+                <?= Form::label('Desde', 'desde', 'class="form-label"') ?>
+                <?= Form::date('desde', 'class="form-control"', $desde ?? date('Y-m-d', strtotime('-30 days'))) ?>
+            </div>
+            <div class="col-md-4">
+                <?= Form::label('Hasta', 'hasta', 'class="form-label"') ?>
+                <?= Form::date('hasta', 'class="form-control"', $hasta ?? date('Y-m-d')) ?>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a href="<?= PUBLIC_PATH ?>admin/configuracion/aplicacion"  class="btn btn-default w-100">
+                    <i class="fas fa-filter"></i> Volver
+</a>
+            </div>
+            <?= Form::close() ?>
+        </div>
+    </div>
+    
+    <?php if (isset($estadisticas) && $estadisticas): ?>
+    <div class="row">
+        <!-- Estadísticas generales -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Resumen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="display-4 text-primary">
+                            <?= $estadisticas['total'] ?? 0 ?>
+                        </div>
+                        <p class="text-muted">Accesos totales</p>
+                    </div>
+                    
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-success">✓</span> Exitosos</td>
+                                <td class="text-end"><?= $estadisticas['exitosos'] ?? 0 ?></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">✗</span> Fallidos</td>
+                                <td class="text-end"><?= $estadisticas['fallidos'] ?? 0 ?></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-info">👤</span> Usuarios únicos</td>
+                                <td class="text-end"><?= $estadisticas['usuarios_unicos'] ?? 0 ?></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-warning">📈</span> Promedio diario</td>
+                                <td class="text-end"><?= round($estadisticas['promedio_diario'] ?? 0, 1) ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top usuarios -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Usuarios Más Activos</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($estadisticas['top_usuarios'])): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Accesos</th>
+                                        <th>Último acceso</th>
+                                        <th>Porcentaje</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($estadisticas['top_usuarios'] as $top_user): ?>
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-user"></i>
+                                            <?= h($top_user['nombre'] ?? 'Usuario #' . $top_user['usuarios_id']) ?>
+                                            <small class="text-muted d-block">
+                                                <?= h($top_user['codigo'] ?? '') ?>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                <?= $top_user['total'] ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?= date('d/m/Y', strtotime($top_user['ultimo_acceso'])) ?>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <?php 
+                                                $porcentaje = ($top_user['total'] / $estadisticas['total']) * 100;
+                                                ?>
+                                                <div class="progress-bar" 
+                                                     style="width: <?= min($porcentaje, 100) ?>%">
+                                                    <?= round($porcentaje, 1) ?>%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center text-muted py-5">
+                            <i class="fa fa-users fa-3x mb-3"></i>
+                            <p>No hay datos de usuarios</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Acciones más comunes -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Acciones Más Comunes</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($estadisticas['top_acciones'])): ?>
+                        <ul class="list-group">
+                            <?php foreach ($estadisticas['top_acciones'] as $accion): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <?= ucfirst(str_replace('_', ' ', $accion['accion'])) ?>
+                                <span class="badge bg-primary rounded-pill">
+                                    <?= $accion['total'] ?>
+                                </span>
+                            </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p class="text-muted text-center py-3">No hay datos de acciones</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Distribución por hora -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Actividad por Hora del Día</h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($estadisticas['por_hora'])): ?>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Hora</th>
+                                        <th>Accesos</th>
+                                        <th>Gráfico</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php for ($hora = 0; $hora < 24; $hora++): ?>
+                                    <?php $total_hora = $estadisticas['por_hora'][$hora] ?? 0; ?>
+                                    <?php $max_hora = max($estadisticas['por_hora']); ?>
+                                    <tr>
+                                        <td><?= sprintf('%02d:00', $hora) ?></td>
+                                        <td><?= $total_hora ?></td>
+                                        <td>
+                                            <div class="progress" style="height: 10px;">
+                                                <div class="progress-bar bg-warning" 
+                                                     style="width: <?= $max_hora > 0 ? ($total_hora / $max_hora * 100) : 0 ?>%">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endfor; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-muted text-center py-3">No hay datos por hora</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+        <div class="alert alert-warning">
+            <i class="fa fa-exclamation-triangle"></i> 
+            No hay datos estadísticos disponibles para el rango seleccionado.
+        </div>
+    <?php endif; ?>
+</div>

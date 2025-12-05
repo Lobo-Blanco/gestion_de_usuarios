@@ -1,0 +1,136 @@
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Menú lateral del perfil -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Mi Cuenta</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="<?= PUBLIC_PATH ?>perfil" 
+                       class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user"></i> Mi Perfil
+                    </a>
+                    <a href="<?= PUBLIC_PATH ?>perfil/editar" 
+                       class="list-group-item list-group-item-action">
+                        <i class="fas fa-edit"></i> Editar Perfil
+                    </a>
+                    <a href="<?= PUBLIC_PATH ?>perfil/password" 
+                       class="list-group-item list-group-item-action">
+                        <i class="fas fa-key"></i> Cambiar Contraseña
+                    </a>
+                    <a href="<?= PUBLIC_PATH ?>perfil/actividad" 
+                       class="list-group-item list-group-item-action">
+                        <i class="fas fa-history"></i> Mi Actividad
+                    </a>
+                    <?php if (AuthHelper::hasAdminAccess()): ?>
+                    <a href="<?= PUBLIC_PATH ?>admin/dashboard" 
+                       class="list-group-item list-group-item-action text-primary">
+                        <i class="fas fa-cog"></i> Panel de Administración
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Mi Perfil</h4>
+                    <a href="<?= PUBLIC_PATH ?>perfil/editar" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            <div class="avatar-circle mb-3">
+                                <span class="initials">
+                                    <?= substr($usuario->nombre, 0, 1) ?>
+                                </span>
+                            </div>
+                            <p class="text-muted small">
+                                Miembro desde: <?= date('d/m/Y', strtotime($usuario->created_at)) ?>
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <h5><?= h($usuario->nombre) ?></h5>
+                            <p class="text-muted"><?= h($usuario->email) ?></p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-id-badge"></i> Código:</strong><br>
+                                    <code><?= h($usuario->codigo) ?></code></p>
+                                    
+                                    <p><strong><i class="fas fa-phone"></i> Teléfono:</strong><br>
+                                    <?= h($usuario->telefono ?: 'No registrado') ?></p>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <p><strong><i class="fas fa-user-tag"></i> Rol:</strong><br>
+                                    <span class="badge bg-primary"><?= h($rol->nombre ?? 'Usuario') ?></span></p>
+                                    
+                                    <p><strong><i class="fas fa-calendar-check"></i> Estado:</strong><br>
+                                    <span class="badge <?= $usuario->activo ? 'bg-success' : 'bg-danger' ?>">
+                                        <?= $usuario->activo ? 'Activo' : 'Inactivo' ?>
+                                    </span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Estadísticas -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title"><?= $total_sesiones ?></h5>
+                                    <p class="card-text text-muted">Accesos totales</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">
+                                        <?= $ultimo_acceso ? date('d/m/Y', strtotime($ultimo_acceso->fecha)) : 'Nunca' ?>
+                                    </h5>
+                                    <p class="card-text text-muted">Último acceso</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">
+                                        <?= date('d/m/Y', strtotime($usuario->updated_at)) ?>
+                                    </h5>
+                                    <p class="card-text text-muted">Última actualización</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 100px;
+    height: 100px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: bold;
+}
+</style>

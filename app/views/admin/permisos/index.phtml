@@ -1,66 +1,264 @@
-<!-- app/views/admin/permisos/index.phtml -->
-<div class="page-header">
-    <h2>
-        <i class="fa fa-key"></i> Gestión de Permisos
-        <?php echo Html::link('admin/permisos/crear', '<i class="fa fa-plus"></i> Nuevo Permiso', 'class="btn btn-success pull-right"'); ?>
-    </h2>
-</div>
-
-<!-- Barra de búsqueda -->
-<div class="panel panel-default">
-    <div class="panel-body">
-        <?php echo Form::open('admin/permisos/buscar', 'method="get" class="form-inline"'); ?>
-        
-        <div class="form-group">
-            <div class="input-group">
-                <input type="text" name="q" class="form-control" placeholder="Buscar permisos..." 
-                       value="<?php echo isset($termino_busqueda) ? h($termino_busqueda) : ''; ?>">
-                <span class="input-group-btn">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-search"></i>
-                    </button>
-                </span>
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fa fa-key text-primary"></i> Gestión de Permisos
+        </h1>
+        <div>
+            <a href="<?= PUBLIC_PATH ?>admin/permisos/buscar" class="btn btn-outline-primary me-2">
+                <i class="fa fa-search"></i> Buscar
+            </a>
+            <?php if (AuthMiddleware::hasPermission('permisos', 'create')): ?>
+                <a href="<?= PUBLIC_PATH ?>admin/permisos/crear" class="btn btn-success">
+                    <i class="fa fa-plus"></i> Nuevo Permiso
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Filtros</h5>
+        </div>
+        <div class="card-body">
+            <?= Form::open('admin/permisos', 'get', 'class="row g-3"') ?>
+            <div class="col-md-4">
+                <?= Form::label('Módulo', 'modulo', 'class="form-label"') ?>
+                <?= Form::select('modulo', 
+                    ['' => 'Todos los módulos'] + array_combine($modulos, $modulos),
+                    'class="form-control  form-select"',
+                    $modulo_actual
+                ) ?>
+            </div>
+            <div class="col-md-4">
+                <?= Form::label('Categoría', 'categoria', 'class="form-label"') ?>
+                <?= Form::select('categoria', 
+                    ['' => 'Todas las categorías'] + array_combine($categorias, $categorias),
+                    'class="form-control form-select"',
+                    $categoria_actual
+                ) ?>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fa fa-filter"></i> Filtrar
+                </button>
+                <a href="<?= PUBLIC_PATH ?>admin/permisos" class="btn btn-outline-secondary">
+                    <i class="fa fa-times"></i> Limpiar
+                </a>
+            </div>
+            <?= Form::close() ?>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <?php if (!empty($estadisticas)): ?>
+    <div class="row mb-4">
+        <?php foreach ($estadisticas as $estad): ?>
+        <div class="col-md-3 mb-3">
+            <div class="card border-<?= $estad->total > 0 ? 'info' : 'secondary' ?>">
+                <div class="card-body text-center py-3">
+                    <h5 class="text-<?= $estad->total > 0 ? 'info' : 'secondary' ?> mb-1">
+                        <?= $estad->total ?>
+                    </h5>
+                    <p class="text-muted mb-0 small">
+                        <?= $estad->modulo ?: 'Sin módulo' ?>
+                    </p>
+                    <a href="<?= PUBLIC_PATH ?>admin/permisos?modulo=<?= urlencode($estad->modulo ?: '') ?>" 
+                       class="btn btn-sm btn-outline-<?= $estad->total > 0 ? 'info' : 'secondary' ?> mt-2">
+                        Ver permisos
+                    </a>
+                </div>
             </div>
         </div>
-        
-        <?php if (isset($termino_busqueda) && $termino_busqueda): ?>
-            <?php echo Html::link('admin/permisos/index', 'Limpiar búsqueda', 'class="btn btn-default"'); ?>
-        <?php endif; ?>
-        
-        <?php echo Form::close(); ?>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+    
+    <!-- Lista de permisos -->
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fa fa-list"></i> 
+                <?php if ($modulo_actual): ?>
+                    Permisos del módulo: <strong><?= h($modulo_actual) ?></strong>
+                <?php else: ?>
+                    Todos los Permisos
+                <?php endif; ?>
+            </h5>
+            <span class="badge bg-light text-dark">
+                <?= is_array($permisos) ? count($permisos) : 0 ?> permiso(s)
+            </span>
+        </div>
+        <div class="card-body">
+            <?php if (empty($permisos)): ?>
+                <div class="text-center py-5">
+                    <i class="fa fa-key fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No hay permisos registrados</p>
+                    <?php if (AuthMiddleware::hasPermission('permisos', 'create')): ?>
+                        <a href="<?= PUBLIC_PATH ?>admin/permisos/crear" class="btn btn-success">
+                            <i class="fa fa-plus"></i> Crear primer permiso
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php elseif ($vista_agrupada): ?>
+                <!-- VISTA AGRUPADA POR MÓDULO (sin filtro) -->
+                <?php foreach ($permisos as $modulo => $permisos_modulo): ?>
+                    <div class="card border mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fa fa-folder-open text-primary"></i>
+                                <?= h($modulo ?: 'Sin módulo') ?>
+                                <span class="badge bg-secondary ms-2">
+                                    <?= count($permisos_modulo) ?>
+                                </span>
+                            </h6>
+                            <a href="<?= PUBLIC_PATH ?>admin/permisos?modulo=<?= urlencode($modulo ?: '') ?>" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-external-link-alt"></i> Ver módulo
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th width="20%">Código</th>
+                                            <th width="25%">Nombre</th>
+                                            <th width="15%">Categoría</th>
+                                            <th width="20%">Descripción</th>
+                                            <th width="10%">Estado</th>
+                                            <th width="10%">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($permisos_modulo as $permiso): ?>
+                                        <tr>
+                                            <td>
+                                                <code><?= h($permiso[0]->codigo) ?></code>
+                                            </td>
+                                            <td><?= h($permiso[0]->nombre) ?></td>
+                                            <td>
+                                                <?php if ($permiso[0]->categoria): ?>
+                                                    <span class="badge bg-info">
+                                                        <?= h($permiso[0]->categoria) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="small text-muted">
+                                                <?= h($permiso[0]->descripcion) ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($permiso[0]->activo): ?>
+                                                    <span class="badge bg-success">Activo</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="<?= PUBLIC_PATH ?>admin/permisos/ver/<?= $permiso[0]->id ?>" 
+                                                       class="btn btn-outline-info" title="Ver">
+                                                        <i class="fa fa-eye"></i>
+                                                    </a>
+                                                    <?php if (AuthMiddleware::hasPermission('permisos', 'edit')): ?>
+                                                        <a href="<?= PUBLIC_PATH ?>admin/permisos/editar/<?= $permiso[0]->id ?>" 
+                                                           class="btn btn-outline-primary" title="Editar">
+                                                            <i class="fa fa-edit"></i>
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- VISTA PLANA (con filtro por módulo) -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="20%">Código</th>
+                                <th width="25%">Nombre</th>
+                                <th width="15%">Categoría</th>
+                                <th width="20%">Descripción</th>
+                                <th width="10%">Estado</th>
+                                <th width="10%">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($permisos as $permiso): ?>
+                            <tr>
+                                <td>
+                                    <code><?= h($permiso->codigo) ?></code>
+                                </td>
+                                <td><?= h($permiso->nombre) ?></td>
+                                <td>
+                                    <?php if ($permiso->categoria): ?>
+                                        <span class="badge bg-info">
+                                            <?= h($permiso->categoria) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="small text-muted">
+                                    <?= h($permiso->descripcion) ?>
+                                </td>
+                                <td>
+                                    <?php if ($permiso->activo): ?>
+                                        <span class="badge bg-success">Activo</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="<?= PUBLIC_PATH ?>admin/permisos/ver/<?= $permiso->id ?>" 
+                                           class="btn btn-outline-info" title="Ver">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
+                                        <?php if (AuthMiddleware::hasPermission('permisos', 'edit')): ?>
+                                            <a href="<?= PUBLIC_PATH ?>admin/permisos/editar/<?= $permiso->id ?>" 
+                                               class="btn btn-outline-primary" title="Editar">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if (AuthMiddleware::hasPermission('permisos', 'delete')): ?>
+                                            <a href="<?= PUBLIC_PATH ?>admin/permisos/eliminar/<?= $permiso->id ?>" 
+                                               class="btn btn-outline-danger" title="Eliminar"
+                                               onclick="return confirm('¿Eliminar permiso?')">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+        <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="fa fa-info-circle"></i>
+                    <?php if ($vista_agrupada): ?>
+                        Vista agrupada por módulo. Use filtros para ver permisos específicos.
+                    <?php else: ?>
+                        Vista filtrada por módulo "<?= h($modulo_actual) ?>".
+                    <?php endif; ?>
+                </small>
+                <?php if ($modulo_actual): ?>
+                    <a href="<?= PUBLIC_PATH ?>admin/permisos" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa fa-times"></i> Quitar filtro
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </div>
-
-<?php if ($permisos && count($permisos) > 0): ?>
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Creado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($permisos as $permiso): ?>
-                <tr>
-                    <td><?php echo $permiso->id; ?></td>
-                    <td><strong><?php echo h($permiso->nombre); ?></strong></td>
-                    <td><?php echo h($permiso->descripcion); ?></td>
-                    <td><?php echo date('d/m/Y', strtotime($permiso->created_at)); ?></td>
-                    <td>
-                        <?php echo Html::link('admin/permisos/editar/' . $permiso->id, '<i class="fa fa-edit"></i>', 'class="btn btn-xs btn-primary" title="Editar"'); ?>
-                        <?php echo Html::link('admin/permisos/recursos/' . $permiso->id, '<i class="fa fa-link"></i>', 'class="btn btn-xs btn-info" title="Asignar Recursos"'); ?>
-                        <?php echo Html::link('admin/permisos/eliminar/' . $permiso->id, '<i class="fa fa-trash"></i>', 'class="btn btn-xs btn-danger btn-delete" title="Eliminar"'); ?>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-<?php else: ?>
-    <div class="alert alert-info">
-        <i class="fa fa-info-circle"></i> No hay permisos definidos. 
-        <?php echo Html::link('admin/permisos/crear', 'Crear el primer permiso'); ?>
-    </div>
-<?php endif; ?>

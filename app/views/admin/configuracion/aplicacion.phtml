@@ -9,7 +9,7 @@
 
     <?php View::partial('flash') ?>
 
-    <form method="post" action="<?= PUBLIC_PATH ?>configuracion/aplicacion">
+    <form method="post" action="<?= PUBLIC_PATH ?>admin/configuracion/aplicacion">
         
         <!-- Información básica -->
         <div class="card shadow mb-4">
@@ -197,12 +197,52 @@
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Sistema de Logs</h6>
-                <button type="submit" 
+                <a href="<?= PUBLIC_PATH ?>admin/logs/limpiar" 
                         name="clear_logs" 
                         class="btn btn-outline-danger"
                         onclick="return confirm('¿Eliminar todos los logs? Esta acción no se puede deshacer.')">
                     <i class="fas fa-trash"></i> Limpiar Logs
-                </button>
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2">
+                            <i class="fas fa-database text-primary"></i>
+                            <strong>Total de registros:</strong> 
+                            <?= (new LogAcceso)->count() ?>
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-calendar-alt text-info"></i>
+                            <strong>Registro más antiguo:</strong>
+                            <?php 
+                            $oldest = (new LogAcceso)->find_first("order: fecha ASC");
+                            echo $oldest ? date('d/m/Y', strtotime($oldest->fecha)) : 'N/A';
+                            ?>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2">
+                            <i class="fas fa-user-check text-success"></i>
+                            <strong>Accesos exitosos (7 días):</strong>
+                            <?= (new LogAcceso)->count("fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND usuario_id IS NOT NULL") ?>
+                        </p>
+                        <p class="mb-0">
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                            <strong>Accesos fallidos (7 días):</strong>
+                            <?= (new LogAcceso)->count("fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND usuario_id IS NULL") ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="<?= PUBLIC_PATH ?>admin/logs/ver" class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fas fa-list"></i> Ver todos los logs
+                    </a>
+                    <a href="<?= PUBLIC_PATH ?>admin/logs/estadisticas" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-chart-bar"></i> Estadísticas
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -278,7 +318,7 @@
                         <div class="card border-left-primary shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?= $systemInfo['php_version'] ?>
+                                    <?= $systemInfo['php']['version'] ?>
                                 </div>
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                     PHP Version
@@ -291,7 +331,7 @@
                         <div class="card border-left-success shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?= $systemInfo['kumbia_version'] ?>
+                                    <?= $systemInfo['kumbiaphp']['version'] ?>
                                 </div>
                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                     KumbiaPHP Version
@@ -304,7 +344,7 @@
                         <div class="card border-left-info shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?= $systemInfo['server'] ?>
+                                    <?= $systemInfo['server']['software'] ?>
                                 </div>
                                 <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                     Servidor Web
@@ -328,7 +368,7 @@
                             <span class="text">Guardar Configuración</span>
                         </button>
 
-                        <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-outline-secondary ml-2">
+                        <a href="<?= PUBLIC_PATH ?>admin/configuracion" class="btn btn-outline-secondary ml-2">
                             <i class="fas fa-arrow-left"></i> Volver al Dashboard
                         </a>
                     </div>

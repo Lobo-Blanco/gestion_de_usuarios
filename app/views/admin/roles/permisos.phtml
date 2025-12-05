@@ -1,10 +1,10 @@
-a<div class="container-fluid">
+<div class="container-fluid">
     <div class="page-header">
         <h1><?= $title ?></h1>
-        <p class="lead">Asigne permisos al rol: <strong><?= htmlspecialchars($rol['nombre']) ?></strong></p>
+        <p class="lead">Asigne permisos al rol: <strong><?= htmlspecialchars($rol->nombre) ?></strong></p>
     </div>
     
-    <?php View::partial('flash') ?>
+    <?php //View::partial('flash') ?>
     
     <form method="post" action="">
         <div class="row">
@@ -44,17 +44,17 @@ a<div class="container-fluid">
                                                         <label>
                                                             <input type="checkbox" 
                                                                    name="permisos[]" 
-                                                                   value="<?= $permiso['id'] ?>"
+                                                                   value="<?= $permiso->id ?>"
                                                                    class="permiso-checkbox"
                                                                    data-modulo="<?= $modulo ?>"
                                                                    data-categoria="<?= $categoria ?>"
-                                                                   <?= in_array($permiso['id'], $permisos_ids) ? 'checked' : '' ?>>
-                                                            <strong><?= htmlspecialchars($permiso['nombre']) ?></strong>
+                                                                   <?= in_array($permiso->id, $permisos_ids) ? 'checked' : '' ?>>
+                                                            <strong><?= htmlspecialchars($permiso->nombre) ?></strong>
                                                             <br>
                                                             <small class="text-muted">
-                                                                <code><?= $permiso['codigo'] ?></code>
-                                                                <?php if ($permiso['descripcion']): ?>
-                                                                    <br><?= htmlspecialchars($permiso['descripcion']) ?>
+                                                                <code><?= $permiso->codigo ?></code>
+                                                                <?php if ($permiso->descripcion): ?>
+                                                                    <br><?= htmlspecialchars($permiso->descripcion) ?>
                                                                 <?php endif; ?>
                                                             </small>
                                                         </label>
@@ -97,7 +97,7 @@ a<div class="container-fluid">
                         <button type="submit" name="asignar" class="btn btn-primary btn-lg">
                             <i class="glyphicon glyphicon-save"></i> Guardar Permisos
                         </button>
-                        <a href="<?= PUBLIC_PATH ?>roles/ver/<?= $rol['id'] ?>" class="btn btn-default">
+                        <a href="<?= PUBLIC_PATH ?>admin/roles/ver/<?= $rol->id ?>" class="btn btn-default">
                             <i class="glyphicon glyphicon-arrow-left"></i> Cancelar
                         </a>
                     </div>
@@ -108,78 +108,136 @@ a<div class="container-fluid">
 </div>
 
 <script>
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Contar permisos
     function actualizarContadores() {
-        var total = $('.permiso-checkbox').length;
-        var seleccionados = $('.permiso-checkbox:checked').length;
+        var checkboxes = document.querySelectorAll('.permiso-checkbox');
+        var total = checkboxes.length;
+        var seleccionados = document.querySelectorAll('.permiso-checkbox:checked').length;
         
-        $('#total-permisos').text(total);
-        $('#total-seleccionados').text(seleccionados);
+        var totalElement = document.getElementById('total-permisos');
+        var seleccionadosElement = document.getElementById('total-seleccionados');
+        
+        if (totalElement) totalElement.textContent = total;
+        if (seleccionadosElement) seleccionadosElement.textContent = seleccionados;
     }
     
     // Seleccionar todos los permisos
-    $('#select-all').click(function() {
-        $('.permiso-checkbox').prop('checked', true);
-        actualizarContadores();
-    });
+    var selectAllBtn = document.getElementById('select-all');
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function() {
+            var checkboxes = document.querySelectorAll('.permiso-checkbox');
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = true;
+            });
+            actualizarContadores();
+        });
+    }
     
     // Deseleccionar todos los permisos
-    $('#deselect-all').click(function() {
-        $('.permiso-checkbox').prop('checked', false);
-        actualizarContadores();
-    });
+    var deselectAllBtn = document.getElementById('deselect-all');
+    if (deselectAllBtn) {
+        deselectAllBtn.addEventListener('click', function() {
+            var checkboxes = document.querySelectorAll('.permiso-checkbox');
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = false;
+            });
+            actualizarContadores();
+        });
+    }
     
     // Seleccionar todos los permisos de un módulo
-    $('.select-modulo').change(function() {
-        var modulo = $(this).data('modulo');
-        var checked = $(this).prop('checked');
-        
-        $('.permiso-checkbox[data-modulo="' + modulo + '"]').prop('checked', checked);
-        $('.select-categoria[data-modulo="' + modulo + '"]').prop('checked', checked);
-        
-        actualizarContadores();
+    var moduloSelectors = document.querySelectorAll('.select-modulo');
+    moduloSelectors.forEach(function(selector) {
+        selector.addEventListener('change', function() {
+            var modulo = this.dataset.modulo;
+            var checked = this.checked;
+            
+            // Seleccionar permisos del módulo
+            var permisosModulo = document.querySelectorAll('.permiso-checkbox[data-modulo="' + modulo + '"]');
+            permisosModulo.forEach(function(checkbox) {
+                checkbox.checked = checked;
+            });
+            
+            // Seleccionar categorías del módulo
+            var categoriasModulo = document.querySelectorAll('.select-categoria[data-modulo="' + modulo + '"]');
+            categoriasModulo.forEach(function(checkbox) {
+                checkbox.checked = checked;
+            });
+            
+            actualizarContadores();
+        });
     });
     
     // Seleccionar todos los permisos de una categoría
-    $('.select-categoria').change(function() {
-        var modulo = $(this).data('modulo');
-        var categoria = $(this).data('categoria');
-        var checked = $(this).prop('checked');
-        
-        $('.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]')
-            .prop('checked', checked);
-        
-        // Verificar si todos los permisos del módulo están seleccionados
-        var totalModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]').length;
-        var seleccionadosModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]:checked').length;
-        
-        $('.select-modulo[data-modulo="' + modulo + '"]')
-            .prop('checked', totalModulo === seleccionadosModulo);
-        
-        actualizarContadores();
+    var categoriaSelectors = document.querySelectorAll('.select-categoria');
+    categoriaSelectors.forEach(function(selector) {
+        selector.addEventListener('change', function() {
+            var modulo = this.dataset.modulo;
+            var categoria = this.dataset.categoria;
+            var checked = this.checked;
+            
+            // Seleccionar permisos de la categoría
+            var permisosCategoria = document.querySelectorAll(
+                '.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]'
+            );
+            
+            permisosCategoria.forEach(function(checkbox) {
+                checkbox.checked = checked;
+            });
+            
+            // Verificar si todos los permisos del módulo están seleccionados
+            var totalModulo = document.querySelectorAll('.permiso-checkbox[data-modulo="' + modulo + '"]').length;
+            var seleccionadosModulo = document.querySelectorAll(
+                '.permiso-checkbox[data-modulo="' + modulo + '"]:checked'
+            ).length;
+            
+            var moduloSelector = document.querySelector('.select-modulo[data-modulo="' + modulo + '"]');
+            if (moduloSelector) {
+                moduloSelector.checked = (totalModulo === seleccionadosModulo);
+            }
+            
+            actualizarContadores();
+        });
     });
     
     // Cuando se cambia un permiso individual
-    $('.permiso-checkbox').change(function() {
-        var modulo = $(this).data('modulo');
-        var categoria = $(this).data('categoria');
-        
-        // Verificar categoría
-        var totalCategoria = $('.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]').length;
-        var seleccionadosCategoria = $('.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]:checked').length;
-        
-        $('.select-categoria[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]')
-            .prop('checked', totalCategoria === seleccionadosCategoria);
-        
-        // Verificar módulo
-        var totalModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]').length;
-        var seleccionadosModulo = $('.permiso-checkbox[data-modulo="' + modulo + '"]:checked').length;
-        
-        $('.select-modulo[data-modulo="' + modulo + '"]')
-            .prop('checked', totalModulo === seleccionadosModulo);
-        
-        actualizarContadores();
+    var permisosIndividuales = document.querySelectorAll('.permiso-checkbox');
+    permisosIndividuales.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            var modulo = this.dataset.modulo;
+            var categoria = this.dataset.categoria;
+            
+            // Verificar categoría
+            var totalCategoria = document.querySelectorAll(
+                '.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]'
+            ).length;
+            
+            var seleccionadosCategoria = document.querySelectorAll(
+                '.permiso-checkbox[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]:checked'
+            ).length;
+            
+            var categoriaSelector = document.querySelector(
+                '.select-categoria[data-modulo="' + modulo + '"][data-categoria="' + categoria + '"]'
+            );
+            
+            if (categoriaSelector) {
+                categoriaSelector.checked = (totalCategoria === seleccionadosCategoria);
+            }
+            
+            // Verificar módulo
+            var totalModulo = document.querySelectorAll('.permiso-checkbox[data-modulo="' + modulo + '"]').length;
+            var seleccionadosModulo = document.querySelectorAll(
+                '.permiso-checkbox[data-modulo="' + modulo + '"]:checked'
+            ).length;
+            
+            var moduloSelector = document.querySelector('.select-modulo[data-modulo="' + modulo + '"]');
+            if (moduloSelector) {
+                moduloSelector.checked = (totalModulo === seleccionadosModulo);
+            }
+            
+            actualizarContadores();
+        });
     });
     
     // Inicializar contadores

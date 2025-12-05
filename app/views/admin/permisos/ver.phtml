@@ -1,0 +1,381 @@
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fa fa-key text-primary"></i> Detalle del Permiso
+        </h1>
+        <div>
+            <a href="<?= PUBLIC_PATH ?>permisos" class="btn btn-outline-secondary me-2">
+                <i class="fa fa-arrow-left"></i> Volver
+            </a>
+            <?php if (AuthMiddleware::hasPermission('permisos', 'edit')): ?>
+                <a href="<?= PUBLIC_PATH ?>permisos/editar/<?= $permiso->id ?>" class="btn btn-outline-primary">
+                    <i class="fa fa-edit"></i> Editar
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Columna principal: Información del permiso -->
+        <div class="col-md-8">
+            <!-- Información básica -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información del Permiso</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <th width="30%">ID:</th>
+                                <td><code>#<?= $permiso->id ?></code></td>
+                            </tr>
+                            <tr>
+                                <th>Código:</th>
+                                <td>
+                                    <span class="badge bg-info font-monospace">
+                                        <?= h($permiso->codigo) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Nombre:</th>
+                                <td><strong><?= h($permiso->nombre) ?></strong></td>
+                            </tr>
+                            <tr>
+                                <th>Descripción:</th>
+                                <td><?= h($permiso->descripcion) ?: '<span class="text-muted">Sin descripción</span>' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Módulo:</th>
+                                <td>
+                                    <?php if ($permiso->modulo): ?>
+                                        <span class="badge bg-secondary">
+                                            <i class="fa fa-folder"></i> <?= h($permiso->modulo) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-muted">Sin módulo</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Categoría:</th>
+                                <td>
+                                    <?php if ($permiso->categoria): ?>
+                                        <span class="badge bg-light text-dark">
+                                            <?= h($permiso->categoria) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-muted">Sin categoría</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Estado:</th>
+                                <td>
+                                    <?php if ($permiso->activo): ?>
+                                        <span class="badge bg-success">
+                                            <i class="fa fa-check"></i> Activo
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger">
+                                            <i class="fa fa-times"></i> Inactivo
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Creado:</th>
+                                <td>
+                                    <i class="fa fa-calendar-plus text-muted"></i>
+                                    <?= $permiso->created_at ? date('d/m/Y H:i', strtotime($permiso->created_at)) : 'N/A' ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Actualizado:</th>
+                                <td>
+                                    <i class="fa fa-calendar-check text-muted"></i>
+                                    <?= $permiso->updated_at ? date('d/m/Y H:i', strtotime($permiso->updated_at)) : 'N/A' ?>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Análisis del código del permiso -->
+                    <div class="alert alert-info mt-3">
+                        <h6 class="alert-heading">
+                            <i class="fa fa-code"></i> Análisis del Código
+                        </h6>
+                        <?php 
+                        $partes = explode('.', $permiso->codigo);
+                        if (count($partes) >= 2):
+                        ?>
+                            <p class="mb-1">
+                                <strong>Formato:</strong> <code><?= implode('</code>.<code>', array_map('h', $partes)) ?></code>
+                            </p>
+                            <p class="mb-0 small">
+                                <?php if (count($partes) == 2): ?>
+                                    <strong>Recurso:</strong> <?= h($partes[0]) ?> 
+                                    <strong>Acción:</strong> <?= h($partes[1]) ?>
+                                <?php elseif (count($partes) == 3): ?>
+                                    <strong>Módulo:</strong> <?= h($partes[0]) ?> 
+                                    <strong>Recurso:</strong> <?= h($partes[1]) ?> 
+                                    <strong>Acción:</strong> <?= h($partes[2]) ?>
+                                <?php endif; ?>
+                            </p>
+                        <?php else: ?>
+                            <p class="mb-0">Formato no estándar</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Roles con este permiso -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Roles con este Permiso</h5>
+                    <span class="badge bg-light text-dark">
+                        <?= count($roles_con_permiso) ?> rol(es)
+                    </span>
+                </div>
+                <div class="card-body">
+                    <?php if (empty($roles_con_permiso)): ?>
+                        <div class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            Ningún rol tiene asignado este permiso.
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Rol</th>
+                                        <th>Código</th>
+                                        <th>Nivel</th>
+                                        <th>Usuarios</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($roles_con_permiso as $rol): ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?= h($rol['nombre']) ?></strong>
+                                            <br>
+                                            <small class="text-muted"><?= h($rol['descripcion']) ?></small>
+                                        </td>
+                                        <td>
+                                            <code><?= h($rol['codigo']) ?></code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-<?= $rol['nivel'] >= 90 ? 'danger' : ($rol['nivel'] >= 50 ? 'warning' : 'info') ?>">
+                                                Nivel <?= $rol['nivel'] ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                <?= $rol['total_usuarios'] ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php if ($rol['activo']): ?>
+                                                <span class="badge bg-success">Activo</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-danger">Inactivo</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <a href="<?= PUBLIC_PATH ?>roles/ver/<?= $rol['id'] ?>" 
+                                               class="btn btn-sm btn-outline-info">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Resumen -->
+                        <div class="alert alert-light mt-3">
+                            <h6 class="alert-heading">Resumen:</h6>
+                            <?php
+                            $total_usuarios = array_sum(array_column($roles_con_permiso, 'total_usuarios'));
+                            $roles_activos = count(array_filter($roles_con_permiso, function($r) { return $r['activo']; }));
+                            ?>
+                            <p class="mb-0">
+                                <i class="fa fa-users text-primary"></i>
+                                <strong><?= $total_usuarios ?></strong> usuario(s) tienen este permiso a través de 
+                                <strong><?= $roles_activos ?></strong> rol(es) activo(s).
+                            </p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Columna lateral: Estadísticas y acciones -->
+        <div class="col-md-4">
+            <!-- Estadísticas -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Estadísticas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="display-6 text-primary">
+                                <?= $estadisticas['total_roles'] ?? 0 ?>
+                            </div>
+                            <p class="small text-muted mb-0">Roles</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="display-6 text-success">
+                                <?= $estadisticas['total_usuarios'] ?? 0 ?>
+                            </div>
+                            <p class="small text-muted mb-0">Usuarios</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-light small">
+                        <i class="fa fa-info-circle"></i>
+                        <strong>Uso del permiso:</strong>
+                        <?php if (($estadisticas['total_usuarios'] ?? 0) == 0): ?>
+                            <span class="text-warning">No está siendo utilizado</span>
+                        <?php elseif (($estadisticas['total_usuarios'] ?? 0) <= 5): ?>
+                            <span class="text-info">Uso limitado</span>
+                        <?php else: ?>
+                            <span class="text-success">En uso activo</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recursos asociados -->
+            <?php if (!empty($recursos_asociados)): ?>
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Recursos Asociados</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($recursos_asociados as $recurso): ?>
+                        <a href="<?= PUBLIC_PATH ?>recursos/ver/<?= $recurso['id'] ?>" 
+                           class="list-group-item list-group-item-action small py-2">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    <i class="fa fa-link text-warning"></i>
+                                    <?= h($recurso['nombre']) ?>
+                                </span>
+                                <span class="badge bg-light text-dark">
+                                    <?= h($recurso['modulo']) ?>
+                                </span>
+                            </div>
+                            <small class="text-muted">
+                                <?= h($recurso['controlador']) ?>/<?= h($recurso['accion']) ?>
+                            </small>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Acciones peligrosas -->
+            <?php if (AuthMiddleware::hasPermission('permisos', 'delete')): ?>
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fa fa-exclamation-triangle"></i> Acciones Peligrosas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <?php if (($estadisticas['total_usuarios'] ?? 0) > 0): ?>
+                        <div class="alert alert-warning">
+                            <i class="fa fa-users"></i>
+                            <strong>No se puede eliminar:</strong>
+                            Este permiso está asignado a <?= $estadisticas['total_usuarios'] ?> usuario(s).
+                        </div>
+                    <?php else: ?>
+                        <form action="<?= PUBLIC_PATH ?>permisos/eliminar/<?= $permiso->id ?>" 
+                              method="post" 
+                              onsubmit="return confirm('¿Está SEGURO de eliminar este permiso?\n\nEsta acción no se puede deshacer.')">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fa fa-trash"></i> Eliminar Permiso
+                            </button>
+                            <small class="text-muted d-block mt-2">
+                                Solo se puede eliminar si no tiene usuarios asignados.
+                            </small>
+                        </form>
+                    <?php endif; ?>
+                    
+                    <!-- Cambiar estado -->
+                    <form action="<?= PUBLIC_PATH ?>permisos/toggle/<?= $permiso->id ?>" 
+                          method="post" 
+                          class="mt-3">
+                        <button type="submit" class="btn btn-<?= $permiso->activo ? 'warning' : 'success' ?> w-100">
+                            <i class="fa fa-power-off"></i> 
+                            <?= $permiso->activo ? 'Desactivar' : 'Activar' ?> Permiso
+                        </button>
+                        <small class="text-muted d-block mt-1">
+                            <?= $permiso->activo ? 
+                                'Los roles no podrán asignar este permiso' : 
+                                'Los roles podrán asignar este permiso' ?>
+                        </small>
+                    </form>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <!-- Actividad reciente -->
+    <?php if (!empty($actividad_reciente)): ?>
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Actividad Reciente</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($actividad_reciente as $log): ?>
+                        <tr>
+                            <td nowrap>
+                                <small><?= date('d/m/Y H:i', strtotime($log->fecha)) ?></small>
+                            </td>
+                            <td>
+                                <?php if ($log->usuarios_id): ?>
+                                    <i class="fa fa-user"></i> 
+                                    Usuario #<?= $log->usuarios_id ?>
+                                <?php else: ?>
+                                    <span class="text-muted">Sistema</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    <?= ucfirst(str_replace('_', ' ', $log->accion)) ?>
+                                </span>
+                            </td>
+                            <td class="small">
+                                <?= h($log->detalles) ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>

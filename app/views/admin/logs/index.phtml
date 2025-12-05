@@ -1,0 +1,208 @@
+<!-- app/views/logs/index.phtml -->
+<div class="page-header">
+    <h2>
+        <i class="fa fa-history"></i> Registro de Accesos
+        <div class="pull-right">
+            <?php echo Html::link('admin/logs/estadisticas', '<i class="fa fa-bar-chart"></i> Estadísticas', 'class="btn btn-info"'); ?>
+            <?php echo Html::link('admin/logs/limpiar', '<i class="fa fa-trash"></i> Limpiar', 'class="btn btn-warning"'); ?>
+        </div>
+    </h2>
+</div>
+
+<!-- Formulario de búsqueda -->
+<div class="panel panel-default">
+    <div class="panel-body">
+        <?php echo Form::open('admin/logs/buscar', 'method="get" class="form-inline"'); ?>
+        
+        <div class="form-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar en logs..." 
+                   value="<?php echo isset($termino_busqueda) ? h($termino_busqueda) : ''; ?>">
+        </div>
+        
+        <div class="form-group">
+            <select name="tipo" class="form-control">
+                <option value="todos" <?php echo (isset($tipo_busqueda) && $tipo_busqueda == 'todos') ? 'selected' : ''; ?>>Todos los logs</option>
+                <option value="exitosos" <?php echo (isset($tipo_busqueda) && $tipo_busqueda == 'exitosos') ? 'selected' : ''; ?>>Accesos exitosos</option>
+                <option value="fallidos" <?php echo (isset($tipo_busqueda) && $tipo_busqueda == 'fallidos') ? 'selected' : ''; ?>>Intentos fallidos</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fa fa-search"></i> Buscar
+        </button>
+        
+        <?php if (isset($termino_busqueda) && $termino_busqueda): ?>
+            <?php echo Html::link('admin/logs/index', 'Limpiar búsqueda', 'class="btn btn-default"'); ?>
+        <?php endif; ?>
+        
+        <?php echo Form::close(); ?>
+    </div>
+</div>
+
+<!-- Resultados -->
+<?php if (isset($total_resultados)): ?>
+    <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i>
+        Mostrando <?php echo count($logs); ?> de <?php echo $total_resultados; ?> resultados
+        <?php if (isset($termino_busqueda) && $termino_busqueda): ?>
+            para "<?php echo h($termino_busqueda); ?>"
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+
+<?php if ($logs && $logs->count > 0): ?>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>IP</th>
+                <th>Detalles</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($logs->items as $log): ?>
+                <tr class="<?php echo $log->usuario_id ? '' : 'danger'; ?>">
+                    <td><?php echo $log->id; ?></td>
+                    <td>
+                        <?php echo date('d/m/Y H:i', strtotime($log->fecha)); ?><br>
+                        <small class="text-muted"><?php echo ViewHelper::timeAgo($log->fecha); ?></small>
+                    </td>
+                    <td>
+                        <?php if ($log->usuario_id): ?>
+                            <?php 
+                            $usuario = $log->getUsuario();
+                            if ($usuario): ?>
+                                <?php echo Html::link('usuarios/ver/' . $usuario->id, h($usuario->nombre), 'class="text-primary"'); ?>
+                                <br>
+                                <small class="text-muted"><?php echo h($usuario->codigo); ?></small>
+                            <?php else: ?>
+                                <span class="text-muted">Usuario eliminado</span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span class="text-danger"><i class="fa fa-times"></i> Fallido</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php 
+                        $clases_accion = [
+                            'login_' => 'label-success',
+                            'logout' => 'label-warning',
+                            'intento_fallido_' => 'label-danger',
+                            'admin_' => 'label-primary',
+                            'usuario_' => 'label-info'
+                        ];
+                        
+                        $clase = 'label-default';
+                        foreach ($clases_accion as $prefijo => $label_clase) {
+                            if (strpos($log->accion, $prefijo) === 0) {
+                                $clase = $label_clase;
+                                break;
+                            }
+                        }
+                        ?>
+                        <span class="label <?php echo $clase; ?>">
+                            <?php echo h($log->accion); ?>
+                        </span>
+                    </td>
+                    <td>
+                        <code><?php echo h($log->ip); ?></code>
+                        <?php if ($log->user_agent): ?>
+                            <br>
+                            <small class="text-muted" title="<?php echo h($log->user_agent); ?>">
+                                <?php echo substr(h($log->user_agent), 0, 30); ?>...
+                            </small>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ($log->detalles): ?>
+                            <button type="button" class="btn btn-xs btn-info" 
+                                    onclick="$('#detalles-<?php echo $log->id; ?>').toggle();">
+                                <i class="fa fa-eye"></i> Ver
+                            </button>
+                            <div id="detalles-<?php echo $log->id; ?>" style="display: none; margin-top: 5px;">
+                                <pre style="font-size: 11px;"><?php echo h($log->detalles); ?></pre>
+                            </div>
+                        <?php else: ?>
+                            <span class="text-muted">Ninguno</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php echo Html::link('admin/logs/ver/' . $log->id, 
+                            '<i class="fa fa-search"></i>', 
+                            'class="btn btn-xs btn-default" title="Ver detalles"'
+                        ); ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    
+    <!-- Paginación -->
+    <?php if ($total_logs > $por_pagina): ?>
+        <nav>
+            <ul class="pagination">
+                <?php 
+                $total_paginas = ceil($total_logs / $por_pagina);
+                $pagina_actual = $pagina_actual ?? 1;
+                
+                // Botón anterior
+                if ($pagina_actual > 1): ?>
+                    <li>
+                        <?php echo Html::link('admin/logs/index?pagina=' . ($pagina_actual - 1), '&laquo;'); ?>
+                    </li>
+                <?php endif;
+                
+                // Números de página
+                for ($i = max(1, $pagina_actual - 3); $i <= min($total_paginas, $pagina_actual + 3); $i++): ?>
+                    <li class="<?php echo $i == $pagina_actual ? 'active' : ''; ?>">
+                        <?php echo Html::link('admin/logs/index?pagina=' . $i, $i); ?>
+                    </li>
+                <?php endfor;
+                
+                // Botón siguiente
+                if ($pagina_actual < $total_paginas): ?>
+                    <li>
+                        <?php echo Html::link('admin/logs/index?pagina=' . ($pagina_actual + 1), '&raquo;'); ?>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+    <?php endif; ?>
+    
+<?php else: ?>
+    <div class="alert alert-warning">
+        <i class="fa fa-exclamation-triangle"></i> No hay registros de acceso.
+    </div>
+<?php endif; ?>
+
+<?php 
+// Función helper para mostrar tiempo relativo
+function timeAgo($datetime) {
+    $time = strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    
+    if ($diff < 60) {
+        return 'hace ' . $diff . ' segundos';
+    } elseif ($diff < 3600) {
+        $minutos = floor($diff / 60);
+        return 'hace ' . $minutos . ' minuto' . ($minutos != 1 ? 's' : '');
+    } elseif ($diff < 86400) {
+        $horas = floor($diff / 3600);
+        return 'hace ' . $horas . ' hora' . ($horas != 1 ? 's' : '');
+    } elseif ($diff < 2592000) {
+        $dias = floor($diff / 86400);
+        return 'hace ' . $dias . ' día' . ($dias != 1 ? 's' : '');
+    } elseif ($diff < 31536000) {
+        $meses = floor($diff / 2592000);
+        return 'hace ' . $meses . ' mes' . ($meses != 1 ? 'es' : '');
+    } else {
+        $anos = floor($diff / 31536000);
+        return 'hace ' . $anos . ' año' . ($anos != 1 ? 's' : '');
+    }
+}
+?>

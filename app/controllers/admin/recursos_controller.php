@@ -306,7 +306,7 @@ class RecursosController extends AdminController
             
             // Registrar en log
             LogAcceso::registrarAccionAdmin(
-                AuthHelpper::getAuthUser()['id'],
+                AuthHelper::getAuthUser()['id'],
                 'recursos_sincronizados',
                 'recurso',
                 null,

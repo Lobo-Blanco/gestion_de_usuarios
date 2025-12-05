@@ -4,13 +4,13 @@
         <p class="lead">Administre los roles y sus permisos en el sistema</p>
     </div>
     
-    <?php View::partial('flash') ?>
+    <?php //View::partial('flash') ?>
     
     <div class="row mb-3">
         <div class="col-md-12">
             <div class="pull-right">
-                <?php if ($has_permission('roles', 'create')): ?>
-                <a href="<?= PUBLIC_PATH ?>roles/crear" class="btn btn-primary">
+                <?php if (AuthMiddleware::hasPermission('roles', 'create')): ?>
+                <a href="<?= PUBLIC_PATH ?>admin/roles/crear" class="btn btn-primary">
                     <i class="glyphicon glyphicon-plus"></i> Nuevo Rol
                 </a>
                 <?php endif; ?>
@@ -46,29 +46,29 @@
                                 <tbody>
                                     <?php foreach ($roles as $rol): ?>
                                     <tr>
-                                        <td><?= $rol['id'] ?></td>
+                                        <td><?= $rol->id ?></td>
                                         <td>
-                                            <code><?= htmlspecialchars($rol['codigo']) ?></code>
+                                            <code><?= htmlspecialchars($rol->codigo) ?></code>
                                         </td>
                                         <td>
-                                            <strong><?= htmlspecialchars($rol['nombre']) ?></strong>
-                                            <?php if ($rol['descripcion']): ?>
+                                            <strong><?= htmlspecialchars($rol->nombre) ?></strong>
+                                            <?php if ($rol->descripcion): ?>
                                                 <br>
-                                                <small class="text-muted"><?= htmlspecialchars($rol['descripcion']) ?></small>
+                                                <small class="text-muted"><?= htmlspecialchars($rol->descripcion) ?></small>
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <span class="badge"><?= $rol['nivel'] ?></span>
+                                            <span class="badge"><?= $rol->nivel ?></span>
                                         </td>
                                         <td>
-                                            <?php if (isset($rol['total_permisos']) && $rol['total_permisos'] > 0): ?>
-                                                <span class="label label-success"><?= $rol['total_permisos'] ?> permisos</span>
+                                            <?php if (isset($rol->total_permisos) && $rol->total_permisos > 0): ?>
+                                                <span class="label label-success"><?= $rol->total_permisos ?> permisos</span>
                                             <?php else: ?>
                                                 <span class="label label-default">Sin permisos</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?php if ($rol['activo']): ?>
+                                            <?php if ($rol->activo): ?>
                                                 <span class="label label-success">Activo</span>
                                             <?php else: ?>
                                                 <span class="label label-danger">Inactivo</span>
@@ -76,27 +76,27 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-xs">
-                                                <a href="<?= PUBLIC_PATH ?>roles/ver/<?= $rol['id'] ?>" 
+                                                <a href="<?= PUBLIC_PATH ?>admin/roles/ver/<?= $rol->id ?>" 
                                                    class="btn btn-default" title="Ver detalles">
                                                     <i class="glyphicon glyphicon-eye-open"></i>
                                                 </a>
                                                 
-                                                <?php if ($has_permission('roles', 'edit')): ?>
-                                                <a href="<?= PUBLIC_PATH ?>roles/editar/<?= $rol['id'] ?>" 
+                                                <?php if (AuthMiddleware::hasPermission('roles', 'edit')): ?>
+                                                <a href="<?= PUBLIC_PATH ?>admin/roles/editar/<?= $rol->id ?>" 
                                                    class="btn btn-primary" title="Editar">
                                                     <i class="glyphicon glyphicon-edit"></i>
                                                 </a>
                                                 <?php endif; ?>
                                                 
-                                                <?php if ($has_permission('roles', 'assign_permissions')): ?>
-                                                <a href="<?= PUBLIC_PATH ?>roles/permisos/<?= $rol['id'] ?>" 
+                                                <?php if (AuthMiddleware::hasPermission('roles', 'assign_permissions')): ?>
+                                                <a href="<?= PUBLIC_PATH ?>admin/roles/permisos/<?= $rol->id ?>" 
                                                    class="btn btn-info" title="Asignar permisos">
                                                     <i class="glyphicon glyphicon-lock"></i>
                                                 </a>
                                                 <?php endif; ?>
                                                 
-                                                <?php if ($has_permission('roles', 'delete') && $rol['codigo'] != 'admin'): ?>
-                                                <a href="<?= PUBLIC_PATH ?>roles/eliminar/<?= $rol['id'] ?>" 
+                                                <?php if (AuthMiddleware::hasPermission('roles', 'delete') && $rol->codigo != 'admin'): ?>
+                                                <a href="<?= PUBLIC_PATH ?>admin/roles/eliminar/<?= $rol->id ?>" 
                                                    class="btn btn-danger" title="Eliminar">
                                                     <i class="glyphicon glyphicon-trash"></i>
                                                 </a>
@@ -127,8 +127,8 @@
                         <div class="col-md-3 col-sm-6">
                             <div class="panel panel-default text-center">
                                 <div class="panel-body">
-                                    <h4><?= htmlspecialchars($estadistica['nombre']) ?></h4>
-                                    <h2><?= $estadistica['total_usuarios'] ?></h2>
+                                    <h4><?= htmlspecialchars($estadistica->nombre) ?></h4>
+                                    <h2><?= $estadistica->total_usuarios ?></h2>
                                     <p>usuarios</p>
                                 </div>
                             </div>

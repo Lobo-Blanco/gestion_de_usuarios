@@ -9,22 +9,19 @@ class AuditLogger
     {
         $this->db = Db::factory();
     }
-    
+
+    public function __destruct() {
+        unset($this->db);
+    }
+
     public function logConfigChange($userId, $configName, $description, $changes = [])
     {
         try {
             $sql = "INSERT INTO config_audit_log 
                     (user_id, config_name, description, changes, ip_address, created_at) 
-                    VALUES (?, ?, ?, ?, ?, NOW())";
+                    VALUES ($userId, $configName, $description, " .  json_encode($changes) . ", " . $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0' . ", NOW())";
             
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                $userId,
-                $configName,
-                $description,
-                json_encode($changes),
-                $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
-            ]);
+            $stmt = $this->db->query($sql);
             
             return true;
         } catch (Exception $e) {

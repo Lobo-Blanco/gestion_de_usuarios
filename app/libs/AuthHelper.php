@@ -262,7 +262,7 @@ class AuthHelper
         if (!$user) return false;
         
         $adminRoles = Config::get('auth.admin_roles', ['admin', 'superadmin']);
-        return in_array($user['rol'], $adminRoles);
+        return in_array(Roles::getById($user['rol_id'])->codigo, $adminRoles);
     }
     
     /**

@@ -1,17 +1,25 @@
 <?php
 // app/modules/auth/controllers/auth_controller.php
-Load::Lib("AuthHooks");
-Load::Lib("AuthHelper");
+//Load::Lib("AuthHooks");
+//Load::Lib("AuthHelper");
 
 class IndexController extends AppController
 {
     /**
      * Método principal que decide el tipo de autenticación
      */
+
+    public function before_filter()
+    {
+        // Inicializar middleware de autenticación
+        AuthMiddleware::init();
+
+    }
+
     public function index()
     {
         $this->isValid = AuthHelper::isAuthenticated();
-        $this->current_user = AuthHelper::getAuthUser();
+        $this->current_user = AuthMiddleware::getAuthUser(); //AuthHelper::getAuthUser();
 
         // Verificar si ya está autenticado
         if ($this->isValid) {

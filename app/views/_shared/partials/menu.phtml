@@ -1,0 +1,33 @@
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Mi Cuenta</h5>
+    </div>
+    <div class="list-group list-group-flush">
+        <a href="<?= PUBLIC_PATH ?>perfil" 
+           class="list-group-item list-group-item-action <?= $action_name == 'index' ? 'active' : '' ?>">
+            <i class="fas fa-user"></i> Mi Perfil
+        </a>
+        <a href="<?= PUBLIC_PATH ?>perfil/editar" 
+           class="list-group-item list-group-item-action <?= $action_name == 'editar' ? 'active' : '' ?>">
+            <i class="fas fa-edit"></i> Editar Perfil
+        </a>
+        <a href="<?= PUBLIC_PATH ?>perfil/password" 
+           class="list-group-item list-group-item-action <?= $action_name == 'cambiar_password' ? 'active' : '' ?>">
+            <i class="fas fa-key"></i> Cambiar Contraseña
+        </a>
+        <a href="<?= PUBLIC_PATH ?>perfil/actividad" 
+           class="list-group-item list-group-item-action <?= $action_name == 'actividad' ? 'active' : '' ?>">
+            <i class="fas fa-history"></i> Mi Actividad
+        </a>
+        <?php if (isset($auth_user) && in_array('admin', $auth_user['roles'] ?? [])): ?>
+        <a href="<?= PUBLIC_PATH ?>admin/dashboard" 
+           class="list-group-item list-group-item-action text-primary">
+            <i class="fas fa-cog"></i> Panel de Administración
+        </a>
+        <?php endif; ?>
+        <a href="<?= PUBLIC_PATH ?>index/logout" 
+           class="list-group-item list-group-item-action text-danger">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </a>
+    </div>
+</div>

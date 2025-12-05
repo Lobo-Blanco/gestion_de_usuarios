@@ -14,12 +14,18 @@ require_once CORE_PATH . 'kumbia/controller.php';
  * @category Kumbia
  * @package Controller
  */
+require_once APP_PATH . "libs\AuthHooks.php";
+require_once APP_PATH . "libs\AuthHelper.php";
+require_once APP_PATH . "libs\AuthMiddleware.php";
+
 abstract class AppController extends Controller
 {
     final protected function initialize()
     {
         // Registrar eventos de autenticación si no están registrados
         $this->registerAuthEvents();
+
+        AuthMiddleware::Init();
     }
 
     final protected function finalize()

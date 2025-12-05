@@ -1,0 +1,828 @@
+<?php
+// Esta vista se usa tanto para crear como editar
+// Variables esperadas:
+// - $action: 'crear' o 'editar'
+// - $rol: objeto rol (para editar) o null (para crear)
+// - $permisos_agrupados: array de permisos agrupados por módulo
+// - $permisos_ids: array de IDs de permisos seleccionados
+// - $errors: array de errores de validación (opcional)
+?>
+
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <?php if ($action == 'crear'): ?>
+                <i class="fa fa-plus-circle text-success"></i> Crear Nuevo Rol
+            <?php else: ?>
+                <i class="fa fa-edit text-primary"></i> Editar Rol: <?= h($rol->nombre) ?>
+            <?php endif; ?>
+        </h1>
+        <a href="<?= PUBLIC_PATH ?>admin/roles" class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left"></i> Volver a Roles
+        </a>
+    </div>
+    
+    <div class="row">
+        <!-- Columna principal: Formulario -->
+        <div class="col-lg-8">
+            <!-- Estadísticas (solo para editar) -->
+            <?php if ($action == 'editar' && isset($rol)): ?>
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-3">
+                            <h5 class="text-primary mb-1">
+                                <?= $total_usuarios ?? 0 ?>
+                            </h5>
+                            <p class="small text-muted mb-0">Usuarios asignados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-3">
+                            <h5 class="text-info mb-1">
+                                <?= count($permisos_agrupados, COUNT_RECURSIVE) - count($permisos_agrupados) ?>
+                            </h5>
+                            <p class="small text-muted mb-0">Permisos disponibles</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center py-3">
+                            <h5 class="text-success mb-1">
+                                <?= count($permisos_ids ?? []) ?>
+                            </h5>
+                            <p class="small text-muted mb-0">Permisos asignados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Formulario -->
+            <?= Form::open($action == 'crear' ? 'roles/guardar' : "roles/actualizar/{$rol->id}") ?>
+            
+            <!-- Información básica -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información Básica</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <?= Form::label('Código *', 'codigo', 'class="form-label"') ?>
+                                <?php 
+                                $codigo_value = isset($rol->codigo) ? $rol->codigo : Input::post('codigo');
+                                $codigo_attrs = $action == 'editar' ? 'class="form-control" readonly' : 'class="form-control" required';
+                                ?>
+                                <?= Form::text('codigo', $codigo_attrs, $codigo_value) ?>
+                                <small class="text-muted">
+                                    Identificador único (ej: admin, usuario, editor)
+                                    <?php if ($action == 'editar'): ?>
+                                        <br><span class="text-warning">No se puede modificar</span>
+                                    <?php endif; ?>
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <?= Form::label('Nombre *', 'nombre', 'class="form-label"') ?>
+                                <?php 
+                                $nombre_value = isset($rol->nombre) ? $rol->nombre : Input::post('nombre');
+                                ?>
+                                <?= Form::text('nombre', 'class="form-control" required', $nombre_value) ?>
+                                <small class="text-muted">Nombre descriptivo del rol</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <?= Form::label('Descripción', 'descripcion', 'class="form-label"') ?>
+                                <?php 
+                                $descripcion_value = isset($rol->descripcion) ? $rol->descripcion : Input::post('descripcion');
+                                ?>
+                                <?= Form::textarea('descripcion', 'class="form-control" rows="2"', $descripcion_value) ?>
+                                <small class="text-muted">Descripción opcional del rol</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <?= Form::label('Nivel', 'nivel', 'class="form-label"') ?>
+                                <?php 
+                                $nivel_value = isset($rol->nivel) ? $rol->nivel : (Input::post('nivel') ?: 0);
+                                ?>
+                                <?= Form::number('nivel', 'class="form-control" min="0" max="100"', $nivel_value) ?>
+                                <small class="text-muted">
+                                    0-100, mayor nivel = más privilegios<br>
+                                    <strong>Admin:</strong> 90-100<br>
+                                    <strong>Editor:</strong> 50-89<br>
+                                    <strong>Usuario:</strong> 0-49
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check form-switch mb-3">
+                        <?php 
+                        $activo_value = isset($rol->activo) ? $rol->activo : (Input::post('activo') ?: 1);
+                        $checked = $activo_value ? 'checked' : '';
+                        ?>
+                        <?= Form::check('activo', 0, "class='form-check-input' role='switch'", $checked, 1) ?>
+                        <?= Form::label('Rol activo', 'activo', 'class="form-check-label"') ?>
+                        <small class="text-muted d-block">
+                            Los roles inactivos no pueden asignarse a nuevos usuarios
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Permisos -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                        <span>Permisos del Rol</span>
+                        <small>
+                            <?= count($permisos_agrupados, COUNT_RECURSIVE) - count($permisos_agrupados) ?> 
+                            permiso(s) disponibles
+                        </small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <?php if (empty($permisos_agrupados)): ?>
+                        <div class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            No hay permisos disponibles. Debe crear permisos primero.
+                        </div>
+                    <?php else: ?>
+                        <div class="row">
+                            <?php foreach ($permisos_agrupados as $modulo => $permisos): ?>
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border">
+                                        <div class="card-header bg-light">
+                                            <div class="form-check">
+                                                <?php 
+                                                // Verificar si todos los permisos del módulo están seleccionados
+                                                $all_selected = true;
+                                                foreach ($permisos as $permiso) {
+                                                    if (!in_array($permiso[0]->id, $permisos_ids ?? [])) {
+                                                        $all_selected = false;
+                                                        break;
+                                                    }
+                                                }
+                                                $modulo_id = 'modulo_' . preg_replace('/[^a-z0-9]/i', '_', $modulo);
+                                                ?>
+                                                <input type="checkbox" 
+                                                       class="form-check-input modulo-checkbox" 
+                                                       id="<?= $modulo_id ?>"
+                                                       data-modulo="<?= h($modulo) ?>"
+                                                       <?= $all_selected ? 'checked' : '' ?>>
+                                                <label class="form-check-label fw-bold" for="<?= $modulo_id ?>">
+                                                    <i class="fa fa-folder-open text-primary"></i>
+                                                    <?= h($modulo) ?>
+                                                    <span class="badge bg-secondary"><?= count($permisos) ?></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                            <?php foreach ($permisos as $permiso): ?>
+                                                <div class="form-check mb-2">
+                                                    <?php 
+                                                    $checked = in_array($permiso[0]->id, $permisos_ids ?? []) ? 'checked' : '';
+                                                    $permiso_codigo = h($permiso[0]->codigo);
+                                                    $permiso_nombre = h($permiso[0]->nombre);
+                                                    ?>
+                                                    <?= Form::check("permisos[]", 
+                                                                    $permiso[0]->id,
+                                                                    "class='form-check-input permiso-checkbox' 
+                                                                    data-modulo='" . h($modulo) . "'
+                                                                    data-codigo='$permiso_codigo'
+                                                                    data-nombre='$permiso_nombre'
+                                                                    data-categoria='" . ($permiso[0]->categoria ?: '') . "'
+                                                                    $checked", 
+                                                                    $permiso[0]->id) ?>
+                                                    <?= Form::label(
+                                                        "<strong>{$permiso_codigo}</strong><br>
+                                                         <small class='text-muted'>{$permiso[0]->nombre}</small>", 
+                                                        "permisos[]", 
+                                                        "class='form-check-label small'"
+                                                    ) ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        
+                        <!-- Selectores rápidos -->
+                        <div class="alert alert-light">
+                            <h6 class="alert-heading">Selección rápida:</h6>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" id="select-all" title="Seleccionar todos los permisos">
+                                    <i class="fa fa-check-square"></i> Todos
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="deselect-all" title="Deseleccionar todos los permisos">
+                                    <i class="fa fa-square"></i> Ninguno
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" id="select-admin" title="Seleccionar solo permisos de administración">
+                                    <i class="fa fa-user-shield"></i> Solo Admin
+                                </button>
+                                <button type="button" class="btn btn-outline-success" id="select-user" title="Seleccionar solo permisos básicos de usuario">
+                                    <i class="fa fa-user"></i> Solo Básicos
+                                </button>
+                                <button type="button" class="btn btn-outline-info" id="select-invert" title="Invertir selección actual">
+                                    <i class="fa fa-exchange-alt"></i> Invertir
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fa fa-info-circle"></i> 
+                                Los permisos de administración incluyen: admin.*, config.*, system.*, etc.
+                                Los permisos básicos incluyen: view.*, read.*, profile.*, etc.
+                            </small>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <!-- Botones de acción -->
+            <div class="d-flex justify-content-between">
+                <a href="<?= PUBLIC_PATH ?>admin/roles" class="btn btn-outline-secondary">
+                    <i class="fa fa-times"></i> Cancelar
+                </a>
+                
+                <div>
+                    <button type="submit" name="guardar" class="btn btn-primary">
+                        <i class="fa fa-save"></i> 
+                        <?= $action == 'crear' ? 'Crear Rol' : 'Actualizar Rol' ?>
+                    </button>
+                    
+                    <?php if ($action == 'editar' && isset($rol)): ?>
+                        <a href="<?= PUBLIC_PATH ?>admin/roles/ver/<?= $rol->id ?>" class="btn btn-outline-info ms-2">
+                            <i class="fa fa-eye"></i> Ver Detalles
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <?= Form::close() ?>
+        </div>
+        
+        <!-- Columna lateral: Información -->
+        <div class="col-lg-4">
+            <!-- Información de ayuda -->
+            <div class="card border-info mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fa fa-info-circle"></i> Información</h5>
+                </div>
+                <div class="card-body">
+                    <h6>¿Qué es un rol?</h6>
+                    <p class="small">Un rol define un conjunto de permisos que pueden asignarse a usuarios.</p>
+                    
+                    <h6>Recomendaciones:</h6>
+                    <ul class="small">
+                        <li>Use códigos descriptivos (ej: admin, editor, lector)</li>
+                        <li>Asigne permisos de forma granular</li>
+                        <li>El nivel determina la jerarquía de roles</li>
+                        <li>Revise los permisos asignados regularmente</li>
+                    </ul>
+                    
+                    <?php if ($action == 'editar' && isset($rol)): ?>
+                        <h6>Información actual:</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>ID:</th>
+                                <td><code>#<?= $rol->id ?></code></td>
+                            </tr>
+                            <tr>
+                                <th>Creado:</th>
+                                <td>
+                                    <?= $rol->created_at ? date('d/m/Y H:i', strtotime($rol->created_at)) : 'N/A' ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Actualizado:</th>
+                                <td>
+                                    <?= $rol->updated_at ? date('d/m/Y H:i', strtotime($rol->updated_at)) : 'N/A' ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Estado:</th>
+                                <td>
+                                    <?php if ($rol->activo): ?>
+                                        <span class="badge bg-success">Activo</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        </table>
+                    <?php else: ?>
+                        <h6>Roles comunes:</h6>
+                        <div class="small">
+                            <p class="mb-1"><strong>Administrador (nivel 100)</strong></p>
+                            <p class="text-muted">Acceso completo al sistema</p>
+                            
+                            <p class="mb-1"><strong>Editor (nivel 50)</strong></p>
+                            <p class="text-muted">Puede crear/editar contenido</p>
+                            
+                            <p class="mb-1"><strong>Usuario (nivel 10)</strong></p>
+                            <p class="text-muted">Acceso básico, solo lectura</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <!-- Usuarios con este rol (solo para editar) -->
+            <?php if ($action == 'editar' && isset($rol)): ?>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Usuarios Asignados</h6>
+                    </div>
+                    <div class="card-body">
+                        <?php 
+                        $usuarios_rol = (new Usuarios())->find("rol_id = $rol->id", "limit: 5");
+                        if ($usuarios_rol):
+                        ?>
+                            <div class="list-group list-group-flush">
+                                <?php foreach ($usuarios_rol as $usuario): ?>
+                                    <a href="<?= PUBLIC_PATH ?>admin/usuarios/ver/<?= $usuario->id ?>" 
+                                       class="list-group-item list-group-item-action small py-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span><?= h($usuario->nombre) ?></span>
+                                            <?php if ($usuario->activo): ?>
+                                                <span class="badge bg-success">Activo</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-danger">Inactivo</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <small class="text-muted"><?= h($usuario->codigo) ?></small>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="text-center mt-2">
+                                <a href="<?= PUBLIC_PATH ?>admin/usuarios?rol=<?= $rol->id ?>" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    Ver todos los usuarios
+                                </a>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted small">No hay usuarios asignados</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Roles existentes (solo para crear) -->
+            <?php if ($action == 'crear'): ?>
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Roles Existentes</h6>
+                    </div>
+                    <div class="card-body">
+                        <?php 
+                        $roles_existentes = (new Roles())->find("order: nivel DESC, nombre ASC", "limit: 5");
+                        if ($roles_existentes):
+                        ?>
+                            <div class="list-group list-group-flush">
+                                <?php foreach ($roles_existentes as $r): ?>
+                                    <a href="<?= PUBLIC_PATH ?>admin/roles/ver/<?= $r->id ?>" 
+                                       class="list-group-item list-group-item-action small">
+                                        <div class="d-flex justify-content-between">
+                                            <span><?= h($r->nombre) ?></span>
+                                            <span class="badge bg-secondary">Nivel <?= $r->nivel ?></span>
+                                        </div>
+                                        <small class="text-muted"><?= h($r->codigo) ?></small>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="text-center mt-2">
+                                <a href="<?= PUBLIC_PATH ?>admin/roles" class="btn btn-sm btn-outline-primary">
+                                    Ver todos los roles
+                                </a>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted small">No hay roles creados aún</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<script>
+// JavaScript para manejar la selección de permisos
+document.addEventListener('DOMContentLoaded', function() {
+    /**
+     * Obtener información del permiso desde los data attributes
+     */
+    function obtenerInfoPermiso(checkbox) {
+        return {
+            checkbox: checkbox,
+            id: checkbox.value,
+            codigo: checkbox.getAttribute('data-codigo') || '',
+            nombre: checkbox.getAttribute('data-nombre') || '',
+            modulo: checkbox.getAttribute('data-modulo') || '',
+            categoria: checkbox.getAttribute('data-categoria') || ''
+        };
+    }
+
+    /**
+     * Obtener todos los checkboxes de permisos con su información
+     */
+    function obtenerPermisosConInfo() {
+        const permisos = [];
+        document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
+            const codigo = obtenerInfoPermiso(checkbox);
+            permisos.push({
+                checkbox: checkbox,
+                codigo: codigo,
+                esAdmin: esPermisoAdmin(codigo),
+                esBasico: esPermisoBasico(codigo),
+                modulo: checkbox.getAttribute('data-modulo')
+            });
+        });
+        return permisos;
+    }
+
+    /**
+     * Obtener el código del permiso desde el label
+     */
+    function obtenerCodigoPermiso(checkbox) {
+        // Buscar el label asociado
+        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+        if (label) {
+            // El código está en el strong dentro del label
+            const strong = label.querySelector('strong');
+            if (strong) {
+                return strong.textContent.trim();
+            }
+        }
+        
+        // Si no se encuentra, usar el value del checkbox
+        return checkbox.value;
+    }
+
+    function esPermisoAdmin(permisoInfo) {
+        if (!permisoInfo.codigo) return false;
+        
+        const codigo = permisoInfo.codigo.toLowerCase();
+        const nombre = permisoInfo.nombre.toLowerCase();
+        const categoria = permisoInfo.categoria.toLowerCase();
+        
+        // Patrones en el código
+        const codigoPatterns = [
+            'admin.', 'administrador.', 'super.', 'root.',
+            'system.', 'config.', 'settings.', 'setup.',
+            'manage.', 'gestionar.', 'control.'
+        ];
+        
+        // Palabras clave en el nombre
+        const nombreKeywords = [
+            'administrador', 'admin', 'superusuario', 'root',
+            'sistema', 'configuración', 'ajustes',
+            'gestión', 'control', 'total', 'completo',
+            'eliminar', 'borrar', 'crear', 'editar todos'
+        ];
+        
+        // Categorías administrativas
+        const categoriasAdmin = [
+            'admin', 'administracion', 'sistema', 'configuracion',
+            'security', 'seguridad', 'management', 'gestion'
+        ];
+        
+        // Verificar en código
+        const esPorCodigo = codigoPatterns.some(pattern => codigo.includes(pattern));
+        
+        // Verificar en nombre
+        const esPorNombre = nombreKeywords.some(keyword => nombre.includes(keyword));
+        
+        // Verificar por categoría
+        const esPorCategoria = categoriasAdmin.includes(categoria);
+        
+        // También permisos que terminan en .all o .full
+        const esAllAccess = codigo.endsWith('.all') || codigo.endsWith('.full') || 
+                           codigo.endsWith('.total') || codigo.endsWith('.complete');
+        
+        return esPorCodigo || esPorNombre || esPorCategoria || esAllAccess;
+    }
+    
+    /**
+     * Verificar si un permiso es básico de usuario
+     */
+    function esPermisoBasico(permisoInfo) {
+        if (!permisoInfo.codigo) return false;
+        
+        const codigo = permisoInfo.codigo.toLowerCase();
+        const nombre = permisoInfo.nombre.toLowerCase();
+        
+        // Patrones en el código para permisos básicos
+        const codigoPatterns = [
+            'view.', 'read.', 'show.', 'list.', 'display.',
+            'profile.', 'self.', 'own.', 'my.',
+            'dashboard.', 'home.', 'main.',
+            'report.', 'informe.', 'estadistica.'
+        ];
+        
+        // Palabras clave en el nombre
+        const nombreKeywords = [
+            'ver', 'visualizar', 'mostrar', 'listar',
+            'perfil', 'propio', 'personal',
+            'inicio', 'panel', 'dashboard',
+            'informe', 'reporte', 'estadística', 'consulta'
+        ];
+        
+        // Verificar en código
+        const esPorCodigo = codigoPatterns.some(pattern => codigo.includes(pattern));
+        
+        // Verificar en nombre
+        const esPorNombre = nombreKeywords.some(keyword => nombre.includes(keyword));
+        
+        // Permisos de solo lectura (no escritura)
+        const esSoloLectura = !codigo.includes('.edit') && 
+                             !codigo.includes('.create') && 
+                             !codigo.includes('.delete') &&
+                             !codigo.includes('.update');
+        
+        return esPorCodigo || esPorNombre || esSoloLectura;
+    }
+    
+    /**
+     * Obtener todos los permisos con su información
+     */
+    function obtenerTodosPermisos() {
+        const permisos = [];
+        document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
+            const info = obtenerInfoPermiso(checkbox);
+            permisos.push({
+                ...info,
+                esAdmin: esPermisoAdmin(info),
+                esBasico: esPermisoBasico(info)
+            });
+        });
+        return permisos;
+    }
+    // Seleccionar/deseleccionar todos los permisos de un módulo
+    document.querySelectorAll('.modulo-checkbox').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const modulo = this.getAttribute('data-modulo');
+            const permisoCheckboxes = document.querySelectorAll('.permiso-checkbox[data-modulo="' + modulo + '"]');
+            
+            permisoCheckboxes.forEach(function(permisoCheckbox) {
+                permisoCheckbox.checked = this.checked;
+            }.bind(this));
+        });
+    });
+    
+    // Actualizar checkbox del módulo cuando cambian los permisos
+    document.querySelectorAll('.permiso-checkbox').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const modulo = this.getAttribute('data-modulo');
+            const moduloCheckbox = document.querySelector('.modulo-checkbox[data-modulo="' + modulo + '"]');
+
+            if (!moduloCheckbox) return;
+
+            const permisoCheckboxes = document.querySelectorAll('.permiso-checkbox[data-modulo="' + modulo + '"]');
+            
+            let allChecked = true;
+            permisoCheckboxes.forEach(function(permisoCheckbox) {
+                if (!permisoCheckbox.checked) {
+                    allChecked = false;
+                }
+            });
+            
+            moduloCheckbox.checked = allChecked;
+            moduloCheckbox.indeterminate = !allChecked && Array.from(permisoCheckboxes).some(cb => cb.checked);
+        });
+    });
+    
+    // Botones de selección rápida
+    document.getElementById('select-all')?.addEventListener('click', function() {
+        document.querySelectorAll('.permiso-checkbox').forEach(function(checkbox) {
+            checkbox.checked = true;
+        });
+        document.querySelectorAll('.modulo-checkbox').forEach(function(checkbox) {
+            checkbox.checked = true;
+            checkbox.indeterminate = false;
+        });
+    });
+    
+    document.getElementById('deselect-all')?.addEventListener('click', function() {
+        document.querySelectorAll('.permiso-checkbox').forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+        document.querySelectorAll('.modulo-checkbox').forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+    });
+    
+    // 3. Permisos de administrador - ¡IMPLEMENTADO!
+    document.getElementById('select-admin')?.addEventListener('click', function() {
+        const permisos = obtenerPermisosConInfo();
+        
+        permisos.forEach(permiso => {
+            permiso.checkbox.checked = permiso.esAdmin;
+        });
+        
+        // Actualizar checkboxes de módulo
+        document.querySelectorAll('.modulo-checkbox').forEach(moduloCheckbox => {
+            const modulo = moduloCheckbox.getAttribute('data-modulo');
+            const permisosModulo = permisos.filter(p => p.modulo === modulo);
+            
+            if (permisosModulo.length === 0) return;
+            
+            const todosSeleccionados = permisosModulo.every(p => p.checkbox.checked);
+            const algunoSeleccionado = permisosModulo.some(p => p.checkbox.checked);
+            
+            moduloCheckbox.checked = todosSeleccionados;
+            moduloCheckbox.indeterminate = !todosSeleccionados && algunoSeleccionado;
+        });
+        
+        // Mostrar feedback
+        const totalAdmin = permisos.filter(p => p.esAdmin).length;
+        const seleccionados = permisos.filter(p => p.esAdmin && p.checkbox.checked).length;
+        alert(`Seleccionados ${seleccionados} de ${totalAdmin} permisos de administración`);
+    });
+    
+    // 4. Permisos básicos de usuario - ¡IMPLEMENTADO!
+    document.getElementById('select-user')?.addEventListener('click', function() {
+        const permisos = obtenerPermisosConInfo();
+        
+        permisos.forEach(permiso => {
+            // Seleccionar solo permisos básicos
+            permiso.checkbox.checked = permiso.esBasico;
+        });
+        
+        // Actualizar checkboxes de módulo
+        document.querySelectorAll('.modulo-checkbox').forEach(moduloCheckbox => {
+            const modulo = moduloCheckbox.getAttribute('data-modulo');
+            const permisosModulo = permisos.filter(p => p.modulo === modulo);
+            
+            if (permisosModulo.length === 0) return;
+            
+            const todosSeleccionados = permisosModulo.every(p => p.checkbox.checked);
+            const algunoSeleccionado = permisosModulo.some(p => p.checkbox.checked);
+            
+            moduloCheckbox.checked = todosSeleccionados;
+            moduloCheckbox.indeterminate = !todosSeleccionados && algunoSeleccionado;
+        });
+        
+        // Mostrar feedback
+        const totalBasicos = permisos.filter(p => p.esBasico).length;
+        const seleccionados = permisos.filter(p => p.esBasico && p.checkbox.checked).length;
+        alert(`Seleccionados ${seleccionados} de ${totalBasicos} permisos básicos`);
+    });
+
+    // 5. Invertir selección
+    document.getElementById('select-invert')?.addEventListener('click', function() {
+        document.querySelectorAll('.permiso-checkbox').forEach(function(checkbox) {
+            checkbox.checked = !checkbox.checked;
+        });
+        
+        // Actualizar checkboxes de módulo
+        document.querySelectorAll('.modulo-checkbox').forEach(moduloCheckbox => {
+            const modulo = moduloCheckbox.getAttribute('data-modulo');
+            const permisosCheckboxes = document.querySelectorAll(`.permiso-checkbox[data-modulo="${modulo}"]`);
+            
+            if (permisosCheckboxes.length === 0) return;
+            
+            const todosSeleccionados = Array.from(permisosCheckboxes).every(cb => cb.checked);
+            const algunoSeleccionado = Array.from(permisosCheckboxes).some(cb => cb.checked);
+            
+            moduloCheckbox.checked = todosSeleccionados;
+            moduloCheckbox.indeterminate = !todosSeleccionados && algunoSeleccionado;
+        });
+        
+        alert('Selección invertida');
+    });
+
+    // Validación del formulario
+    document.querySelector('form')?.addEventListener('submit', function(e) {
+        const codigo = document.querySelector('input[name="codigo"]')?.value.trim();
+        const nombre = document.querySelector('input[name="nombre"]')?.value.trim();
+        
+        if (!codigo || !nombre) {
+            e.preventDefault();
+            alert('Por favor complete los campos obligatorios (Código y Nombre)');
+            return false;
+        }
+        
+        // Validar que el código solo tenga caracteres permitidos (solo para crear)
+        <?php if ($action == 'crear'): ?>
+        const codigoRegex = /^[a-z0-9_]+$/i;
+        if (!codigoRegex.test(codigo)) {
+            e.preventDefault();
+            alert('El código solo puede contener letras, números y guiones bajos');
+            return false;
+        }
+        <?php endif; ?>
+
+                // Validar que al menos un permiso esté seleccionado
+        const permisosSeleccionados = document.querySelectorAll('.permiso-checkbox:checked').length;
+        if (permisosSeleccionados === 0) {
+            const confirmar = confirm('¿Está seguro de crear un rol sin permisos?\n\nLos usuarios con este rol no podrán acceder a ninguna funcionalidad.');
+            if (!confirmar) {
+                e.preventDefault();
+                return false;
+            }
+        }
+        
+        // Validar nivel
+        const nivelInput = document.querySelector('input[name="nivel"]');
+        if (nivelInput) {
+            const nivel = parseInt(nivelInput.value);
+            if (nivel < 0 || nivel > 100) {
+                e.preventDefault();
+                alert('El nivel debe estar entre 0 y 100');
+                return false;
+            }
+        }
+        
+        return true;
+    });
+    
+    // === INICIALIZACIÓN: Configurar estado inicial de los módulos ===
+    function inicializarEstadosModulos() {
+        document.querySelectorAll('.modulo-checkbox').forEach(moduloCheckbox => {
+            const modulo = moduloCheckbox.getAttribute('data-modulo');
+            const permisosCheckboxes = document.querySelectorAll(`.permiso-checkbox[data-modulo="${modulo}"]`);
+            
+            if (permisosCheckboxes.length === 0) return;
+            
+            const todosSeleccionados = Array.from(permisosCheckboxes).every(cb => cb.checked);
+            const algunoSeleccionado = Array.from(permisosCheckboxes).some(cb => cb.checked);
+            
+            moduloCheckbox.checked = todosSeleccionados;
+            moduloCheckbox.indeterminate = !todosSeleccionados && algunoSeleccionado;
+        });
+    }
+    
+    // Ejecutar inicialización
+    setTimeout(inicializarEstadosModulos, 100);
+    
+    // === FUNCIONES ADICIONALES ÚTILES ===
+    
+    // Buscar permisos por texto
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'mb-3';
+    searchContainer.innerHTML = `
+        <div class="input-group input-group-sm">
+            <input type="text" id="search-permisos" class="form-control" placeholder="Buscar permisos...">
+            <button class="btn btn-outline-secondary" type="button" id="clear-search">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    // Insertar buscador después de los botones de selección rápida
+    const quickSelectDiv = document.querySelector('.alert-light');
+    if (quickSelectDiv) {
+        quickSelectDiv.parentNode.insertBefore(searchContainer, quickSelectDiv.nextSibling);
+        
+        // Funcionalidad de búsqueda
+        document.getElementById('search-permisos').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
+                const label = document.querySelector(`label[for="${checkbox.id}"]`);
+                if (!label) return;
+                
+                const text = label.textContent.toLowerCase();
+                const parentCard = checkbox.closest('.card-body');
+                
+                if (searchTerm === '') {
+                    // Mostrar todo
+                    checkbox.style.display = '';
+                    if (parentCard) parentCard.style.display = '';
+                } else if (text.includes(searchTerm)) {
+                    // Mostrar coincidencias
+                    checkbox.style.display = '';
+                    if (parentCard) parentCard.style.display = '';
+                } else {
+                    // Ocultar no coincidencias
+                    checkbox.style.display = 'none';
+                }
+            });
+        });
+        
+        // Limpiar búsqueda
+        document.getElementById('clear-search').addEventListener('click', function() {
+            document.getElementById('search-permisos').value = '';
+            document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
+                checkbox.style.display = '';
+            });
+            document.querySelectorAll('.card-body').forEach(cardBody => {
+                cardBody.style.display = '';
+            });
+        });
+    }
+});
+</script>

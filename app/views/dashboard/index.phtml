@@ -1,0 +1,60 @@
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="<?= PUBLIC_PATH ?>">Sistema</a>
+        </div>
+
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <?php if ($has_permission['dashboard']): ?>
+                <li><a href="<?= PUBLIC_PATH ?>admin/dashboard">Dashboard</a></li>
+                <?php endif; ?>
+                
+                <?php if ($has_permission['usuarios']): ?>
+                <li><a href="<?= PUBLIC_PATH ?>admin/usuarios">Usuarios</a></li>
+                <?php endif; ?>
+                
+                <?php if ($has_permission['roles']): ?>
+                <li><a href="<?= PUBLIC_PATH ?>admin/roles">Roles</a></li>
+                <?php endif; ?>
+                
+                <?php if ($has_permission['configuracion']): ?>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        Configuración <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion">Dashboard</a></li>
+                        <li class="divider"></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/autenticacion">Autenticación</a></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/aplicacion">Aplicación</a></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/base_datos">Base de Datos</a></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/correo">Correo</a></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/cache">Cache</a></li>
+                        <li class="divider"></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/backup">Backup</a></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/limpiar_cache">Limpiar Cache</a></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/sistema">Sistema</a></li>
+                        <li><a href="<?= PUBLIC_PATH ?>admin/configuracion/historial">Historial</a></li>
+                    </ul>
+                </li>
+                <?php endif; ?>
+            </ul>
+            
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="glyphicon glyphicon-user"></i>
+                        <?= htmlspecialchars($auth_user['nombre'] ?? 'Usuario') ?>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="<?= PUBLIC_PATH ?>perfil">Mi Perfil</a></li>
+                        <li class="divider"></li>
+                        <li><a href="<?= PUBLIC_PATH ?>logout">Cerrar Sesión</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,92 @@
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trash-alt"></i> Limpiar Logs Antiguos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle"></i> ¡ADVERTENCIA!
+                        </h5>
+                        <p>Esta acción eliminará permanentemente registros antiguos del sistema de logs.</p>
+                        <ul class="mb-0">
+                            <li>Esta operación <strong>no se puede deshacer</strong></li>
+                            <li>Se recomienda hacer backup de la base de datos primero</li>
+                            <li>Solo se eliminarán registros más antiguos que el límite especificado</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Estadísticas actuales</h5>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="display-6 text-primary">
+                                        <?= $total_antiguos ?? 0 ?>
+                                    </div>
+                                    <p class="text-muted">Registros > 90 días</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="display-6 text-info">
+                                        <?= (new LogAcceso)->count() ?>
+                                    </div>
+                                    <p class="text-muted">Total de registros</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="display-6 text-success">
+                                        <?= (new LogAcceso)->count("fecha >= DATE_SUB(NOW(), INTERVAL 30 DAY)") ?>
+                                    </div>
+                                    <p class="text-muted">Últimos 30 días</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <?= Form::open('logs/limpiar', 'post') ?>
+                    <div class="mb-4">
+                        <?= Form::label('Días a conservar', 'dias', 'class="form-label"') ?>
+                        <div class="input-group">
+                            <?= Form::number('dias', 'class="form-control" min="1" max="365" value="90"') ?>
+                            <span class="input-group-text">días</span>
+                        </div>
+                        <small class="text-muted">
+                            Se conservarán los registros de los últimos N días. Los más antiguos serán eliminados.
+                        </small>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <?= Form::check('confirm_backup', 'class="form-check-input"') ?>
+                        <?= Form::label('He realizado backup de la base de datos', 'confirm_backup', 
+                                        'class="form-check-label text-danger"') ?>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <?= Form::check('confirm_understanding', 'class="form-check-input" required') ?>
+                        <?= Form::label('Comprendo que esta acción no se puede deshacer', 'confirm_understanding', 
+                                        'class="form-check-label text-danger"') ?>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="<?= PUBLIC_PATH ?>logs" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" name="confirmar" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Limpiar Logs Antiguos
+                        </button>
+                    </div>
+                    
+                    <?= Form::close() ?>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-info-circle"></i> 
+                    Los logs son importantes para auditoría y seguridad. 
+                    Considere exportarlos antes de eliminar.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

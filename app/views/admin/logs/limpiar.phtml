@@ -1,0 +1,263 @@
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trash-alt"></i> Limpiar Logs Antiguos
+                    </h5>
+                    <a href="<?= PUBLIC_PATH ?>admin/logs" class="btn btn-sm btn-light">
+                        <i class="fa fa-arrow-left"></i> Volver a Logs
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Estadísticas -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-primary"><?= $total_registros ?? 0 ?></h3>
+                                    <p class="text-muted mb-0">Registros totales</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-info"><?= round($tamano_tabla ?? 0, 2) ?> MB</h3>
+                                    <p class="text-muted mb-0">Tamaño de tabla</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-warning">
+                                        <?= $fecha_mas_antigua ? date('d/m/Y', strtotime($fecha_mas_antigua)) : 'N/A' ?>
+                                    </h3>
+                                    <p class="text-muted mb-0">Registro más antiguo</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3 class="text-success"><?= date('d/m/Y') ?></h3>
+                                    <p class="text-muted mb-0">Fecha actual</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Distribución por antigüedad -->
+                    <?php if (!empty($estadisticas_antiguedad)): ?>
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Distribución de registros por antigüedad</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Periodo</th>
+                                            <th>Registros</th>
+                                            <th>Porcentaje</th>
+                                            <th>Gráfico</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($estadisticas_antiguedad as $estad): ?>
+                                        <?php $porcentaje = ($estad['total'] / $total_registros) * 100; ?>
+                                        <tr>
+                                            <td><?= $estad['periodo'] ?></td>
+                                            <td><?= $estad['total'] ?></td>
+                                            <td><?= round($porcentaje, 1) ?>%</td>
+                                            <td width="40%">
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" 
+                                                         style="width: <?= $porcentaje ?>%; background-color: 
+                                                         <?php 
+                                                         switch($estad['periodo']) {
+                                                             case 'Última semana': echo '#28a745'; break;
+                                                             case 'Último mes': echo '#17a2b8'; break;
+                                                             case 'Últimos 3 meses': echo '#ffc107'; break;
+                                                             case 'Último año': echo '#fd7e14'; break;
+                                                             default: echo '#dc3545';
+                                                         }
+                                                         ?>">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Formulario principal -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning">
+                            <h6 class="mb-0">Configuración de Limpieza</h6>
+                        </div>
+                        <div class="card-body">
+                            <?= Form::open('admin/logs/limpiar', 'post', 'id="form-limpiar"') ?>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <?= Form::label('Conservar registros de los últimos:', 'dias', 'class="form-label"') ?>
+                                        <div class="input-group">
+                                            <?= Form::number('dias', 'class="form-control" min="1" max="3650" value="90" id="dias-input"', 90) ?>
+                                            <span class="input-group-text">días</span>
+                                            <button type="submit" name="vista_previa" class="btn btn-outline-primary">
+                                                <i class="fa fa-eye"></i> Vista Previa
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">
+                                            Los registros más antiguos que este período serán eliminados permanentemente.
+                                        </small>
+                                    </div>
+                                    
+                                    <!-- Vista previa (si se generó) -->
+                                    <?php if (isset($vista_previa)): ?>
+                                    <div class="alert alert-info mt-3">
+                                        <h6><i class="fa fa-binoculars"></i> Vista Previa</h6>
+                                        <p>Con <?= $dias_vista_previa ?> días de conservación:</p>
+                                        <ul class="mb-0">
+                                            <li>Se eliminarían: <strong><?= $vista_previa['total'] ?> registros</strong></li>
+                                            <li>Fecha más antigua: <?= date('d/m/Y', strtotime($vista_previa['fecha_minima'])) ?></li>
+                                            <li>Fecha más reciente: <?= date('d/m/Y', strtotime($vista_previa['fecha_maxima'])) ?></li>
+                                            <li>Usuarios afectados: <?= $vista_previa['usuarios_unicos'] ?></li>
+                                        </ul>
+                                        
+                                        <?php if (!empty($ejemplos)): ?>
+                                        <hr>
+                                        <p class="mb-1"><strong>Ejemplos de registros a eliminar:</strong></p>
+                                        <div class="small">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Fecha</th>
+                                                        <th>Usuario</th>
+                                                        <th>Acción</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php foreach ($ejemplos as $ejemplo): ?>
+                                                    <tr>
+                                                        <td><?= date('d/m/Y', strtotime($ejemplo['fecha'])) ?></td>
+                                                        <td><?= $ejemplo['usuarios_id'] ?: 'Anónimo' ?></td>
+                                                        <td><?= $ejemplo['accion'] ?></td>
+                                                    </tr>
+                                                    <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6>Recomendaciones</h6>
+                                            <ul class="small mb-0">
+                                                <li><strong>90 días</strong>: Mantenimiento normal</li>
+                                                <li><strong>180 días</strong>: Auditoría trimestral</li>
+                                                <li><strong>365 días</strong>: Auditoría anual</li>
+                                                <li><strong>730 días</strong>: Requisitos legales</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Confirmaciones de seguridad -->
+                            <div class="alert alert-danger">
+                                <h5 class="alert-heading">
+                                    <i class="fa fa-exclamation-triangle"></i> Confirmaciones de Seguridad
+                                </h5>
+                                
+                                <div class="form-check mb-2">
+                                    <?= Form::check('confirm_backup', 1,"class='form-check-input' required") ?>
+                                    <?= Form::label('<strong>He realizado una copia de seguridad (backup) de la base de datos</strong>', 
+                                                   'confirm_backup', "class='form-check-label'") ?>
+                                    <small class="text-muted d-block">
+                                        Esta acción no se puede deshacer. Se recomienda encarecidamente hacer backup primero.
+                                    </small>
+                                </div>
+                                
+                                <div class="form-check">
+                                    <?= Form::check('confirm_understanding', 1, "class='form-check-input' required") ?>
+                                    <?= Form::label('<strong>Comprendo que esta acción eliminará permanentemente los registros seleccionados</strong>', 
+                                                   'confirm_understanding', "class='form-check-label'") ?>
+                                </div>
+                            </div>
+                            
+                            <!-- Botones de acción -->
+                            <div class="d-flex justify-content-between">
+                                <a href="<?= PUBLIC_PATH ?>admin/logs" class="btn btn-outline-secondary">
+                                    <i class="fa fa-times"></i> Cancelar
+                                </a>
+                                
+                                <div>
+                                    <button type="submit" name="vista_previa" class="btn btn-info me-2">
+                                        <i class="fa fa-eye"></i> Vista Previa
+                                    </button>
+                                    
+                                    <button type="submit" name="confirmar" class="btn btn-danger" 
+                                            onclick="return confirm('¿Está ABSOLUTAMENTE seguro de eliminar estos registros?')">
+                                        <i class="fa fa-trash-alt"></i> Ejecutar Limpieza
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <?= Form::close() ?>
+                        </div>
+                        
+                        <div class="card-footer text-muted small">
+                            <i class="fa fa-info-circle"></i> 
+                            <strong>Nota:</strong> Los logs son importantes para auditoría, seguridad y resolución de problemas. 
+                            Considere exportarlos antes de eliminar. Esta acción puede tomar varios minutos dependiendo 
+                            de la cantidad de registros.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validación adicional en cliente
+document.getElementById('form-limpiar').addEventListener('submit', function(e) {
+    const dias = document.getElementById('dias-input').value;
+    const confirmCheckbox = document.querySelector('input[name="confirm_understanding"]');
+    
+    if (parseInt(dias) < 7) {
+        if (!confirm('¿Está seguro de conservar menos de 7 días de logs? Esto podría afectar la auditoría.')) {
+            e.preventDefault();
+            return false;
+        }
+    }
+    
+    if (!confirmCheckbox.checked) {
+        alert('Debe confirmar que comprende que esta acción no se puede deshacer');
+        e.preventDefault();
+        return false;
+    }
+    
+    const btn = e.submitter;
+    if (btn.name === 'confirmar') {
+        return confirm('¿ESTÁ ABSOLUTAMENTE SEGURO?\n\nEsta acción ELIMINARÁ PERMANENTEMENTE los registros antiguos.\nNo se puede deshacer.');
+    }
+    
+    return true;
+});
+</script>

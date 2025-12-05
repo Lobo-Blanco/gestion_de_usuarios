@@ -1,0 +1,388 @@
+<!-- app/views/configuracion/importar.phtml -->
+<div class="container-fluid">
+    <div class="page-header">
+        <h1>
+            <i class="glyphicon glyphicon-import"></i> <?= $title ?>
+            <small>Importar configuraciones desde archivo</small>
+        </h1>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Panel principal -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-upload"></i> Importar Configuraciones
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <!-- Formulario de importación -->
+                            <div class="well">
+                                <h4>Subir Archivo</h4>
+                                <form method="post" enctype="multipart/form-data">
+                                    <div class="form-group">
+                                        <label for="import_file">Archivo de configuración:</label>
+                                        <input type="file" name="import_file" id="import_file" class="form-control">
+                                        <small class="text-muted">
+                                            Formatos soportados: JSON, PHP, INI, YAML
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Opciones de importación:</label>
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" name="overwrite" value="1">
+                                                Sobrescribir configuraciones existentes
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" name="backup" value="1" checked>
+                                                Crear backup antes de importar
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="format">Formato (opcional):</label>
+                                        <select name="format" id="format" class="form-control">
+                                            <option value="auto">Auto-detect</option>
+                                            <option value="json">JSON</option>
+                                            <option value="php">PHP Array</option>
+                                            <option value="ini">INI</option>
+                                            <option value="yaml">YAML</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <button type="submit" name="importar" class="btn btn-primary">
+                                        <i class="glyphicon glyphicon-import"></i> Importar
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Enlace para exportar -->
+                            <div class="alert alert-info">
+                                <h5><i class="glyphicon glyphicon-export"></i> ¿Necesita exportar primero?</h5>
+                                <p>Puede exportar las configuraciones actuales antes de importar:</p>
+                                <a href="<?= PUBLIC_PATH ?>configuracion/exportar?format=json" class="btn btn-default btn-sm">
+                                    <i class="glyphicon glyphicon-download"></i> Exportar como JSON
+                                </a>
+                                <a href="<?= PUBLIC_PATH ?>configuracion/exportar?format=php" class="btn btn-default btn-sm">
+                                    <i class="glyphicon glyphicon-download"></i> Exportar como PHP
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <!-- Editor manual -->
+                            <div class="well">
+                                <h4>Pegar Contenido Manualmente</h4>
+                                <form method="post">
+                                    <div class="form-group">
+                                        <label for="import_content">Contenido de configuración:</label>
+                                        <textarea name="import_content" id="import_content" 
+                                                  class="form-control" rows="10" 
+                                                  placeholder='Pegue aquí el contenido JSON, PHP, INI o YAML...'
+                                                  style="font-family: monospace;"><?= 
+                                                    isset($template_content) ? htmlspecialchars($template_content) : '' 
+                                                  ?></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="template_id">Cargar plantilla:</label>
+                                        <div class="input-group">
+                                            <select name="template_id" id="template_id" class="form-control">
+                                                <option value="">Seleccionar plantilla...</option>
+                                                <?php foreach ($templates as $id => $template): ?>
+                                                    <option value="<?= $id ?>">
+                                                        <?= $template['name'] ?> - <?= $template['description'] ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <span class="input-group-btn">
+                                                <button type="submit" name="cargar_plantilla" class="btn btn-default">
+                                                    <i class="glyphicon glyphicon-download-alt"></i> Cargar
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="overwrite" value="1">
+                                            Sobrescribir configuraciones existentes
+                                        </label>
+                                    </div>
+                                    
+                                    <button type="submit" name="importar" class="btn btn-primary">
+                                        <i class="glyphicon glyphicon-import"></i> Importar desde Texto
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Información de formatos -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <i class="glyphicon glyphicon-info-sign"></i> Formatos Soportados
+                                    </h4>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5>JSON</h5>
+                                            <pre class="small" style="background: #f5f5f5; padding: 5px;">
+{
+    "databases": {
+        "default": {
+            "driver": "mysql",
+            "host": "localhost"
+        }
+    }
+}</pre>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>PHP</h5>
+                                            <pre class="small" style="background: #f5f5f5; padding: 5px;">
+&lt;?php
+return [
+    'databases' => [
+        'default' => [
+            'driver' => 'mysql',
+            'host' => 'localhost'
+        ]
+    ]
+];</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de ayuda -->
+<div class="modal fade" id="helpModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">
+                    <i class="glyphicon glyphicon-question-sign"></i> Ayuda para Importación
+                </h4>
+            </div>
+            <div class="modal-body">
+                <h4>Estructura de importación</h4>
+                <p>El archivo de importación debe contener uno o más de los siguientes elementos:</p>
+                
+                <h5>1. Bases de Datos</h5>
+                <pre>{
+    "databases": {
+        "default": {
+            "driver": "mysql",
+            "host": "localhost",
+            "database": "nombre_db",
+            "username": "usuario",
+            "password": "contraseña",
+            "charset": "utf8"
+        }
+    }
+}</pre>
+                
+                <h5>2. Configuración de Aplicación</h5>
+                <pre>{
+    "app": {
+        "name": "Mi Aplicación",
+        "debug": false,
+        "timezone": "Europe/Madrid"
+    }
+}</pre>
+                
+                <h5>3. Configuración de Autenticación</h5>
+                <pre>{
+    "auth": {
+        "session_lifetime": 7200,
+        "remember_me": true
+    }
+}</pre>
+                
+                <h4>Notas importantes</h4>
+                <ul>
+                    <li>Puede importar múltiples configuraciones a la vez</li>
+                    <li>Las configuraciones existentes se respetan a menos que use "Sobrescribir"</li>
+                    <li>Se recomienda hacer backup antes de importar</li>
+                    <li>Puede probar primero con una plantilla</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar plantilla via AJAX
+document.getElementById('template_id').addEventListener('change', function() {
+    if (this.value) {
+        const templateContent = {
+            'database_simple': `{
+    "databases": {
+        "default": {
+            "driver": "mysql",
+            "host": "localhost",
+            "port": 3306,
+            "database": "mi_base_datos",
+            "username": "root",
+            "password": "",
+            "charset": "utf8"
+        }
+    }
+}`,
+            'database_multiple': `{
+    "databases": {
+        "development": {
+            "driver": "mysql",
+            "host": "localhost",
+            "database": "app_dev",
+            "username": "root",
+            "password": "",
+            "charset": "utf8"
+        },
+        "production": {
+            "driver": "mysql",
+            "host": "db.produccion.com",
+            "database": "app_prod",
+            "username": "prod_user",
+            "password": "secreto",
+            "charset": "utf8mb4"
+        }
+    }
+}`,
+            'app_config': `{
+    "app": {
+        "name": "Mi Aplicación",
+        "debug": false,
+        "url": "https://midominio.com",
+        "timezone": "Europe/Madrid"
+    }
+}`
+        };
+        
+        if (templateContent[this.value]) {
+            document.getElementById('import_content').value = templateContent[this.value];
+        }
+    }
+});
+
+// Validar archivo antes de enviar
+document.querySelector('form[enctype="multipart/form-data"]').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('import_file');
+    const textArea = document.getElementById('import_content');
+    
+    if (!fileInput.value && !textArea.value.trim()) {
+        e.preventDefault();
+        alert('Por favor, seleccione un archivo o pegue contenido en el área de texto.');
+        return false;
+    }
+    
+    // Validar tamaño máximo (10MB)
+    if (fileInput.files.length > 0) {
+        const fileSize = fileInput.files[0].size;
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        
+        if (fileSize > maxSize) {
+            e.preventDefault();
+            alert('El archivo es demasiado grande (máximo 10MB)');
+            return false;
+        }
+    }
+    
+    return true;
+});
+
+// Resaltar sintaxis básica
+function highlightSyntax() {
+    const textarea = document.getElementById('import_content');
+    const content = textarea.value;
+    
+    // Detectar formato simple
+    if (content.trim().startsWith('{') && content.trim().endsWith('}')) {
+        textarea.style.color = '#d63384'; // JSON
+    } else if (content.includes('<?php') || content.includes('return array') || content.includes('return [')) {
+        textarea.style.color = '#0d6efd'; // PHP
+    } else if (content.includes('[') && content.includes(']') && content.includes('=')) {
+        textarea.style.color = '#198754'; // INI
+    } else {
+        textarea.style.color = '#6c757d'; // Por defecto
+    }
+}
+
+// Observar cambios en el textarea
+document.getElementById('import_content').addEventListener('input', highlightSyntax);
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    highlightSyntax();
+    
+    // Tooltips
+    $('[title]').tooltip();
+});
+</script>
+
+<style>
+.well {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.panel-heading {
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6;
+}
+
+pre {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+textarea {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.alert {
+    margin-bottom: 20px;
+}
+
+.btn-group .btn {
+    margin-right: 5px;
+}
+
+.modal-body pre {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.input-group-btn .btn {
+    height: 34px;
+}
+</style>

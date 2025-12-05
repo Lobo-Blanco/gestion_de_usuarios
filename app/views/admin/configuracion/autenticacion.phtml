@@ -7,135 +7,172 @@
     </div>
 
     <?php View::partial('flash') ?>
-
-    <form method="post" action="">
+    <?= Form::open('admin/configuracion/autenticacion', 'post') ?>
         <input type="hidden" name="_csrf_token" value="<?= $csrf_token ?>">
         
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Modos de Autenticación</h6>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Modos de Autenticación</h5>
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <label>Seleccione modos habilitados:</label><br>
-                    <?php foreach ($authModes as $value => $label): ?>
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" 
-                               class="custom-control-input" 
-                               id="mode_<?= $value ?>"
-                               name="authentication_modes[]" 
-                               value="<?= $value ?>"
-                               <?= in_array($value, $config_auth['authentication_modes'] ?? []) ? 'checked' : '' ?>>
-                        <label class="custom-control-label" for="mode_<?= $value ?>">
-                            <?= $label ?>
-                        </label>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Seleccione los modos habilitados:</label>
+                    <?php foreach ($auth_modes as $mode): ?>
+                        <?php $checked = in_array($mode, $selected_modes) ? 'checked' : ''; ?>
+                        <div class="form-check">
+                            <?= Form::check("authentication_modes[]", 0, "class='form-check-input' value='$mode'", $checked) ?>
+                            <?= Form::label(ucfirst(str_replace('_', ' ', $mode)), "authentication_modes[]", 
+                                        "class='form-check-label'") ?>
+                        </div>
                     <?php endforeach; ?>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Autenticación por Credenciales</h6>
+        <!-- Configuración REMOTE_USER -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Autenticación REMOTE_USER (SSO)</h5>
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" 
-                               class="custom-control-input" 
-                               id="credentials_enabled"
-                               name="credentials_enabled" 
-                               value="1"
-                               <?= ($config_auth['credentials']['enabled'] ?? true) ? 'checked' : '' ?>>
-                        <label class="custom-control-label" for="credentials_enabled">
-                            Habilitar autenticación por credenciales
-                        </label>
+                <div class="form-check form-switch mb-3">
+                    <?php $checked = $remote_user_enabled ? 'checked' : ''; ?>
+                    <?= Form::check('remote_user_enabled', 0, "class='form-check-input' role='switch'", $checked) ?>
+                    <?= Form::label('Habilitar autenticación REMOTE_USER', 'remote_user_enabled', 
+                                "class='form-check-label'") ?>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <?= Form::label('Campo REMOTE_USER', 'remote_user_field', 'class="form-label"') ?>
+                        <?= Form::text('remote_user_field', 'class="form-control"', 
+                                    $config_auth['remote_user']['field_name'] ?? 'REMOTE_USER') ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?= Form::label('Rol por defecto', 'default_role', 'class="form-label"') ?>
+                        <?= Form::select('default_role', [
+                            'usuario' => 'Usuario',
+                            'lector' => 'Lector',
+                            'editor' => 'Editor'
+                        ], 'class="form-control form-select"', $config_auth['remote_user']['default_role'] ?? 'usuario') ?>
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" 
-                               class="custom-control-input" 
-                               id="allow_registration"
-                               name="allow_registration" 
-                               value="1"
-                               <?= ($config_auth['credentials']['allow_registration'] ?? true) ? 'checked' : '' ?>>
-                        <label class="custom-control-label" for="allow_registration">
-                            Permitir registro público
-                        </label>
-                    </div>
+                
+                <div class="form-check form-switch mt-3">
+                    <?php $checked = $auto_create_user ? 'checked' : ''; ?>
+                    <?= Form::check('auto_create_user', 0, "class='form-check-input' role='switch'", $checked) ?>
+                    <?= Form::label('Crear usuario automáticamente si no existe', 'auto_create_user', 
+                                "class='form-check-label'") ?>
                 </div>
+            </div>
+        </div>
 
-                <div class="form-group">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" 
-                               class="custom-control-input" 
-                               id="verify_email"
-                               name="verify_email" 
-                               value="1"
-                               <?= ($config_auth['credentials']['verify_email'] ?? false) ? 'checked' : '' ?>>
-                        <label class="custom-control-label" for="verify_email">
-                            Requerir verificación de email
-                        </label>
+        <!-- Configuración Credenciales -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Autenticación con Credenciales</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-check form-switch mb-3">
+                    <?php $checked = $credentials_enabled ? 'checked' : ''; ?>
+                    <?= Form::check('credentials_enabled', 0, "class='form-check-input' role='switch'. $checked") ?>
+                    <?= Form::label('Habilitar autenticación con usuario/contraseña', 'credentials_enabled', 
+                                "class='form-check-label'") ?>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-3">
+                            <?php $checked = $allow_registration ? 'checked' : ''; ?>
+                            <?= Form::check('allow_registration', 0, "class='form-check-input' role='switch'", $checked) ?>
+                            <?= Form::label('Permitir registro de nuevos usuarios', 'allow_registration', 
+                                        "class='form-check-label'") ?>
+                        </div>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <?php $checked = $config_auth['credentials']['verify_email'] ?? false ? 'checked' : ''; ?>
+                            <?= Form::check('verify_email', 0, "class='form-check-input' role='switch'", $checked) ?>
+                            <?= Form::label('Verificar email antes de activar cuenta', 'verify_email', 
+                                        "class='form-check-label'") ?>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-3">
+                            <?php $checked = $config_auth['credentials']['auto_activate'] ?? false ? 'checked' : ''; ?>
+                            <?= Form::check('auto_activate', 0, "class='form-check-input' role='switch'", $checked) ?>
+                            <?= Form::label('Activar cuenta automáticamente', 'auto_activate', 
+                                        "class='form-check-label'") ?>
+                        </div>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <?php $checked = $config_auth['credentials']['allow_restore_password_by_email'] ?? true ? 'checked' : ''; ?>
+                            <?= Form::check('allow_restore_password', 0, "class='form-check-input' role='switch'", $checked) ?>
+                            <?= Form::label('Permitir restaurar contraseña por email', 'allow_restore_password', 
+                                        "class='form-check-label'") ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Configuración de Sesión</h6>
+        <!-- Roles Administrativos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Roles Administrativos</h5>
             </div>
             <div class="card-body">
-                <div class="form-group">
-                    <label for="session_lifetime">Duración de sesión (segundos)</label>
-                    <input type="number" 
-                           class="form-control" 
-                           id="session_lifetime"
-                           name="session_lifetime" 
-                           min="300" 
-                           max="86400"
-                           value="<?= $config_auth['session']['lifetime'] ?? 7200 ?>">
-                    <small class="form-text text-muted">Mínimo: 300 (5 min), Máximo: 86400 (24 horas)</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Roles Administrativos</h6>
-            </div>
-            <div class="card-body">
-                <div class="form-group">
-                    <label>Seleccione roles con acceso administrativo:</label><br>
-                    <?php foreach ($availableRoles as $role): ?>
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" 
-                               class="custom-control-input" 
-                               id="role_<?= $role['id'] ?>"
-                               name="admin_roles[]" 
-                               value="<?= $role['codigo'] ?>"
-                               <?= in_array($role['codigo'], $config_auth['admin_roles'] ?? []) ? 'checked' : '' ?>>
-                        <label class="custom-control-label" for="role_<?= $role['id'] ?>">
-                            <?= htmlspecialchars($role['nombre']) ?>
-                        </label>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Seleccione los roles con privilegios de administración:</label>
+                    <?php foreach ($available_roles as $role): ?>
+                        <?php $checked = in_array($role['codigo'], $selected_admin_roles) ? 'checked' : ''; ?>
+                        <div class="form-check">
+                            <?= Form::check("admin_roles[]", 0, "class='form-check-input' value='{$role['codigo']}'", $checked) ?>
+                            <?= Form::label("{$role['nombre']} ({$role['codigo']})", "admin_roles[]", 
+                                        "class='form-check-label'") ?>
+                        </div>
                     <?php endforeach; ?>
                 </div>
             </div>
         </div>
+
+        <!-- Configuración de Sesión -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Configuración de Sesión</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <?= Form::label('Espacio de nombres', 'session_namespace', 'class="form-label"') ?>
+                        <?= Form::text('session_namespace', 'class="form-control"', 
+                                    $config_auth['session']['namespace'] ?? 'app_auth') ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= Form::label('Clave de sesión', 'session_key', 'class="form-label"') ?>
+                        <?= Form::text('session_key', 'class="form-control"', 
+                                    $config_auth['session']['key'] ?? 'app_user_session') ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= Form::label('Duración (segundos)', 'session_lifetime', 'class="form-label"') ?>
+                        <?= Form::number('session_lifetime', 'class="form-control" min="300"', 
+                                    $config_auth['session']['lifetime'] ?? 7200) ?>
+                        <small class="text-muted">7200 segundos = 2 horas</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <div class="card shadow">
             <div class="card-body">
                 <button type="submit" name="guardar_auth" class="btn btn-primary">
                     <i class="fas fa-save"></i> Guardar Configuración
                 </button>
-                <a href="<?= PUBLIC_PATH ?>configuracion" class="btn btn-secondary">
+                <a href="<?= PUBLIC_PATH ?>admin/configuracion" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>
         </div>
-    </form>
+    <?= Form::close() ?>
 </div>

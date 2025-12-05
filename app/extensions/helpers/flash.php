@@ -122,10 +122,10 @@ class Flash
         self::$messages = Session::get('flash') ?: [];
         
         if (!empty(self::$messages)) {
-            //$message = array_shift($messages);
-            //Session::set('flash', $messages);
-            //return $message['type'];
-            return $message[0]['type'];
+            $message = array_shift(self::$messages);
+            Session::set('flash', self::$messages);
+            return $message['type'];
+            //return self::$messages[0]['type'];
         }
         
         return '';

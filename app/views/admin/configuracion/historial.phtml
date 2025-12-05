@@ -1,0 +1,556 @@
+<div class="container-fluid">
+    <div class="page-header">
+        <h1>
+            <i class="glyphicon glyphicon-time"></i> Historial de Configuraciones
+            <small>Registro de todos los cambios</small>
+        </h1>
+    </div>
+    
+    <?php View::partial('flash') ?>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Panel principal -->
+            <div class="panel panel-default">
+                <div class="panel-heading clearfix">
+                    <div class="pull-left">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-list"></i> Registros del Historial
+                        </h3>
+                    </div>
+                    <div class="pull-right">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-xs btn-default" data-toggle="modal" data-target="#filterModal">
+                                <i class="glyphicon glyphicon-filter"></i> Filtros
+                            </button>
+                            <button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#cleanupModal">
+                                <i class="glyphicon glyphicon-trash"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-body">
+                    <?php if (empty($history)): ?>
+                        <!-- Estado vacío -->
+                        <div class="text-center" style="padding: 50px 0;">
+                            <i class="glyphicon glyphicon-time" style="font-size: 48px; color: #ddd;"></i>
+                            <h3 style="color: #999;">No hay registros en el historial</h3>
+                            <p class="text-muted">Los cambios en las configuraciones aparecerán aquí</p>
+                        </div>
+                    <?php else: ?>
+                        <!-- Tabla de historial -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="20%">Fecha y Hora</th>
+                                        <th width="25%">Configuración</th>
+                                        <th width="15%">Tipo</th>
+                                        <th width="15%">Usuario</th>
+                                        <th width="15%">Tamaño</th>
+                                        <th width="10%" class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($history as $entry): ?>
+                                        <?php
+                                        // Determinar tipo de configuración
+                                        $type = 'General';
+                                        $icon = 'glyphicon-cog';
+                                        $badge_class = 'label-default';
+                                        
+                                        if (strpos($entry['config'], 'database_') === 0) {
+                                            $type = 'Base de Datos';
+                                            $icon = 'glyphicon-hdd';
+                                            $badge_class = 'label-primary';
+                                        } elseif (strpos($entry['config'], 'app_') === 0) {
+                                            $type = 'Aplicación';
+                                            $icon = 'glyphicon-globe';
+                                            $badge_class = 'label-success';
+                                        } elseif (strpos($entry['config'], 'auth_') === 0) {
+                                            $type = 'Autenticación';
+                                            $icon = 'glyphicon-lock';
+                                            $badge_class = 'label-warning';
+                                        }
+                                        
+                                        // Formatear fecha
+                                        $date = date('d/m/Y', strtotime($entry['timestamp']));
+                                        $time = date('H:i:s', strtotime($entry['timestamp']));
+                                        
+                                        // Formatear tamaño
+                                        $size = $this->formatBytes($entry['size']);
+                                        ?>
+                                        
+                                        <tr>
+                                            <td>
+                                                <div class="text-muted small"><?= $date ?></div>
+                                                <div><strong><?= $time ?></strong></div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <i class="glyphicon <?= $icon ?>"></i>
+                                                    <strong><?= $entry['config'] ?></strong>
+                                                </div>
+                                                <div class="small text-muted">
+                                                    <code><?= $entry['filename'] ?></code>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="label <?= $badge_class ?>">
+                                                    <?= $type ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <i class="glyphicon glyphicon-user"></i>
+                                                <?= $entry['user'] ?>
+                                            </td>
+                                            <td>
+                                                <span class="badge"><?= $size ?></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group">
+                                                    <a href="<?= PUBLIC_PATH ?>configuracion/ver_historial/<?= $entry['filename'] ?>" 
+                                                       class="btn btn-xs btn-default" title="Ver detalles">
+                                                        <i class="glyphicon glyphicon-search"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-xs btn-warning dropdown-toggle" 
+                                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="glyphicon glyphicon-cog"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-right">
+                                                        <li>
+                                                            <a href="<?= PUBLIC_PATH ?>configuracion/ver_historial/<?= $entry['filename'] ?>">
+                                                                <i class="glyphicon glyphicon-eye-open"></i> Ver completo
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="<?= PUBLIC_PATH ?>configuracion/descargar_historial/<?= $entry['filename'] ?>">
+                                                                <i class="glyphicon glyphicon-download"></i> Descargar
+                                                            </a>
+                                                        </li>
+                                                        <li role="separator" class="divider"></li>
+                                                        <li>
+                                                            <a href="#" onclick="restoreEntry('<?= $entry['filename'] ?>', '<?= $entry['config'] ?>')">
+                                                                <i class="glyphicon glyphicon-repeat"></i> Restaurar
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Paginación -->
+                        <?php if ($total_pages > 1): ?>
+                            <nav class="text-center">
+                                <ul class="pagination pagination-sm" style="margin-top: 0;">
+                                    <!-- Primera página -->
+                                    <li class="<?= $current_page == 1 ? 'disabled' : '' ?>">
+                                        <a href="<?= $this->getPageUrl(1) ?>" title="Primera página">
+                                            <i class="glyphicon glyphicon-step-backward"></i>
+                                        </a>
+                                    </li>
+                                    
+                                    <!-- Página anterior -->
+                                    <li class="<?= $current_page == 1 ? 'disabled' : '' ?>">
+                                        <a href="<?= $this->getPageUrl($current_page - 1) ?>" title="Página anterior">
+                                            <i class="glyphicon glyphicon-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    
+                                    <!-- Números de página -->
+                                    <?php 
+                                    $start_page = max(1, $current_page - 2);
+                                    $end_page = min($total_pages, $current_page + 2);
+                                    
+                                    for ($i = $start_page; $i <= $end_page; $i++): 
+                                    ?>
+                                        <li class="<?= $i == $current_page ? 'active' : '' ?>">
+                                            <a href="<?= $this->getPageUrl($i) ?>"><?= $i ?></a>
+                                        </li>
+                                    <?php endfor; ?>
+                                    
+                                    <!-- Página siguiente -->
+                                    <li class="<?= $current_page == $total_pages ? 'disabled' : '' ?>">
+                                        <a href="<?= $this->getPageUrl($current_page + 1) ?>" title="Página siguiente">
+                                            <i class="glyphicon glyphicon-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                    
+                                    <!-- Última página -->
+                                    <li class="<?= $current_page == $total_pages ? 'disabled' : '' ?>">
+                                        <a href="<?= $this->getPageUrl($total_pages) ?>" title="Última página">
+                                            <i class="glyphicon glyphicon-step-forward"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                                
+                                <div class="text-muted small">
+                                    Página <?= $current_page ?> de <?= $total_pages ?> 
+                                    | Total: <?= count($all_history) ?> registros
+                                </div>
+                            </nav>
+                        <?php endif; ?>
+                        
+                    <?php endif; ?>
+                </div>
+                
+                <div class="panel-footer">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="glyphicon glyphicon-info-sign"></i>
+                                El historial se guarda automáticamente cuando se modifican configuraciones
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <?php if (!empty($history)): ?>
+                                <span class="label label-default">
+                                    Mostrando <?= count($history) ?> de <?= count($all_history) ?> registros
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Filtros -->
+<div class="modal fade" id="filterModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <form method="get" action="">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">
+                        <i class="glyphicon glyphicon-filter"></i> Filtros
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modal_config">Tipo de configuración:</label>
+                        <select name="config" id="modal_config" class="form-control">
+                            <option value="">Todos los tipos</option>
+                            <option value="database" <?= $config_filter == 'database' ? 'selected' : '' ?>>Base de Datos</option>
+                            <option value="app" <?= $config_filter == 'app' ? 'selected' : '' ?>>Aplicación</option>
+                            <option value="auth" <?= $config_filter == 'auth' ? 'selected' : '' ?>>Autenticación</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal_limit">Registros por página:</label>
+                        <select name="limit" id="modal_limit" class="form-control">
+                            <option value="10" <?= $limit == 10 ? 'selected' : '' ?>>10 registros</option>
+                            <option value="20" <?= $limit == 20 ? 'selected' : '' ?>>20 registros</option>
+                            <option value="50" <?= $limit == 50 ? 'selected' : '' ?>>50 registros</option>
+                            <option value="100" <?= $limit == 100 ? 'selected' : '' ?>>100 registros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal_order">Ordenar por:</label>
+                        <select name="order" id="modal_order" class="form-control">
+                            <option value="newest" selected>Más recientes primero</option>
+                            <option value="oldest">Más antiguos primero</option>
+                            <option value="name">Nombre (A-Z)</option>
+                            <option value="size">Tamaño</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="glyphicon glyphicon-ok"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Limpieza -->
+<div class="modal fade" id="cleanupModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title text-warning">
+                        <i class="glyphicon glyphicon-warning-sign"></i> Limpiar Historial
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <h4><i class="glyphicon glyphicon-alert"></i> ¡Atención!</h4>
+                        <p>Esta acción eliminará permanentemente registros antiguos del historial.</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Conservar registros de los últimos:</label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="dias" value="7" checked>
+                                7 días
+                                <small class="text-muted">(Eliminará registros anteriores a una semana)</small>
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="dias" value="30">
+                                30 días
+                                <small class="text-muted">(Eliminará registros anteriores a un mes)</small>
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="dias" value="90">
+                                90 días
+                                <small class="text-muted">(Eliminará registros anteriores a 3 meses)</small>
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="dias" value="365">
+                                365 días
+                                <small class="text-muted">(Eliminará registros anteriores a un año)</small>
+                            </label>
+                        </div>
+                    </div>
+                    <?php
+                        /**
+                         * Helper para formatear bytes
+                         */
+                        function formatBytes($bytes, $precision = 2)
+                        {
+                            $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+                            
+                            $bytes = max($bytes, 0);
+                            $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+                            $pow = min($pow, count($units) - 1);
+                            
+                            $bytes /= pow(1024, $pow);
+                            
+                            return round($bytes, $precision) . ' ' . $units[$pow];
+                        }
+
+                    ?>
+                    <div class="well well-sm">
+                        <h5>Información actual:</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="glyphicon glyphicon-folder-open"></i> Total registros: <strong><?= count($all_history) ?></strong></li>
+                            <li><i class="glyphicon glyphicon-hdd"></i> Espacio usado: <strong><?= formatBytes(array_sum(array_column($all_history, 'size'))) ?></strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        <i class="glyphicon glyphicon-remove"></i> Cancelar
+                    </button>
+                    <button type="submit" name="limpiar_historial" class="btn btn-warning">
+                        <i class="glyphicon glyphicon-trash"></i> Limpiar Historial
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Restauración -->
+<div class="modal fade" id="restoreModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">
+                    <i class="glyphicon glyphicon-repeat"></i> Restaurar Configuración
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h4 id="restoreConfigName"></h4>
+                    <p id="restoreFileName"></p>
+                </div>
+                
+                <p>¿Está seguro de restaurar esta configuración desde el historial?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="glyphicon glyphicon-warning-sign"></i>
+                    <strong>Nota:</strong> Esta acción sobrescribirá la configuración actual.
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmText">Para confirmar, escriba "RESTAURAR":</label>
+                    <input type="text" class="form-control" id="confirmText" 
+                           placeholder="Escriba RESTAURAR aquí" onkeyup="checkRestoreConfirm()">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="post" id="restoreForm" style="display: inline;">
+                    <input type="hidden" name="restaurar" value="1">
+                    <input type="hidden" name="historial_file" id="restoreFileInput">
+                    
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        <i class="glyphicon glyphicon-remove"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning" id="restoreButton" disabled>
+                        <i class="glyphicon glyphicon-repeat"></i> Restaurar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Restaurar una entrada
+function restoreEntry(filename, configName) {
+    document.getElementById('restoreConfigName').innerHTML = 
+        '<i class="glyphicon glyphicon-cog"></i> ' + configName;
+    document.getElementById('restoreFileName').innerHTML = 
+        '<small><code>' + filename + '</code></small>';
+    document.getElementById('restoreFileInput').value = filename;
+    document.getElementById('confirmText').value = '';
+    document.getElementById('restoreButton').disabled = true;
+    
+    $('#restoreModal').modal('show');
+}
+
+// Validar confirmación de restauración
+function checkRestoreConfirm() {
+    const input = document.getElementById('confirmText');
+    const button = document.getElementById('restoreButton');
+    button.disabled = input.value.toUpperCase() !== 'RESTAURAR';
+}
+
+// Función para formatear bytes (helper)
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Inicializar tooltips
+$(function () {
+    $('[title]').tooltip({
+        placement: 'top',
+        container: 'body'
+    });
+});
+
+// Auto-submit para selects de filtro
+document.addEventListener('DOMContentLoaded', function() {
+    const filterSelects = document.querySelectorAll('#filterModal select');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+});
+</script>
+
+<style>
+/* Estilos personalizados */
+.panel-heading .btn-group {
+    margin-top: -5px;
+}
+
+.table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.badge {
+    background-color: #6c757d;
+    font-weight: normal;
+}
+
+.label {
+    font-size: 85%;
+    font-weight: normal;
+    padding: .2em .6em .3em;
+}
+
+.pagination > li > a {
+    padding: 5px 10px;
+}
+
+.panel-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+.dropdown-menu > li > a {
+    padding: 5px 15px;
+    font-size: 13px;
+}
+
+.dropdown-menu > li > a > i {
+    margin-right: 5px;
+    width: 14px;
+    text-align: center;
+}
+
+.well {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.alert h4 {
+    margin-top: 0;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.radio label, .checkbox label {
+    font-weight: normal;
+}
+
+.modal-body .alert {
+    margin-bottom: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .table-responsive {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+    
+    .panel-heading .btn-group {
+        margin-top: 0;
+        margin-bottom: 10px;
+        display: block;
+        text-align: right;
+    }
+    
+    .panel-heading .pull-left,
+    .panel-heading .pull-right {
+        float: none !important;
+        width: 100%;
+    }
+}
+</style>

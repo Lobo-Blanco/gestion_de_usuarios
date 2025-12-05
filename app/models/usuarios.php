@@ -14,6 +14,8 @@ class Usuarios extends ActiveRecord
 
     public function initialize()
     {
+        $this->has_many('roles', 'model: Roles', 'fk: rol_id');
+        $this->belongs_to('usuario_permisos', "fk: usuarios_id");
         $this->validates_presence_of('codigo', 'nombre');
         $this->validates_uniqueness_of('codigo');
     }
@@ -159,5 +161,28 @@ class Usuarios extends ActiveRecord
     public function verifyPassword($password)
     {
         return $this->pasword == hash(Config::get("auth.auth_algorithm"), $password);
+    }
+
+    // Y añadir este método:
+    public function getRol()
+    {
+        // Si ya hay relación belongs_to, se puede acceder directamente:
+        // return $this->rol;
+        
+        // O hacer consulta manual:
+        if ($this->rol_id) {
+            return (new Roles())->find($this->rol_id);
+        }
+        return null;
+    }
+
+    // También útil: método para verificar si es admin
+    public function esAdmin()
+    {
+        $rol = $this->getRol();
+        if (!$rol) return false;
+        
+        $admin_roles = Config::get('auth.admin_roles', ['admin', 'superadmin']);
+        return in_array($rol->codigo, $admin_roles);
     }
 }

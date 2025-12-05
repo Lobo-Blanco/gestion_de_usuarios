@@ -10,14 +10,14 @@
             <p><strong>Código:</strong> <?php echo $usuario['codigo']; ?></p>
             <p><strong>Nombre:</strong> <?php echo $usuario['nombre']; ?></p>
             <p><strong>Email:</strong> <?php echo $usuario['email']; ?></p>
-            <p><strong>Rol:</strong> <?php echo $usuario['rol']; ?></p>
+            <p><strong>Rol:</strong> <?php echo Roles::getById($usuario['rol_id'])->nombre; ?></p>
             <p><strong>Método de autenticación:</strong> <?php echo $usuario['auth_method']; ?></p>
         </div>
         <div class="card-footer">
             <?php echo Html::link('index/logout', 'Cerrar Sesión', 'class="btn btn-warning"'); ?>
             
             <?php if (AuthHelper::hasAdminAccess()): ?>
-                <?php echo Html::link('admin/', 'Panel de Administración', 'class="btn btn-danger"'); ?>
+                <?php echo Html::link('dashboard', 'Panel de Administración', 'class="btn btn-danger"'); ?>
             <?php endif; ?>
         </div>
     </div>
